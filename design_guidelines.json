@@ -1,0 +1,124 @@
+{
+  "theme": "dark",
+  "typography": {
+    "fonts": {
+      "headings": "Chivo, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "mono": "IBM Plex Mono, monospace"
+    },
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter uppercase",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-bold tracking-tight",
+      "h4": "text-lg font-bold uppercase tracking-widest text-warm-amber",
+      "body": "text-base font-normal leading-relaxed",
+      "stats_labels": "text-xs font-mono uppercase tracking-[0.2em] text-slate-gray-light/70",
+      "code_diffs": "text-sm font-mono leading-snug"
+    },
+    "rules": [
+      "NEVER use generic fonts like Inter, Roboto, or Open Sans for headings. Maintain the extreme hardware/industrial feel with Chivo.",
+      "All tags, SLA timers, commit hashes, version numbers, and metadata must use IBM Plex Mono.",
+      "Headings should have tight letter spacing, while overlines and labels must be uppercase with wide letter spacing (tracking-[0.2em]).",
+      "Hierarchy gaps must not exceed 2 Tailwind steps between heading and subheading."
+    ]
+  },
+  "colors": {
+    "palette": {
+      "primary_brand": "#0F6E6E",
+      "primary_accent": "#F2A93C",
+      "bg_dark": "#1A1D23",
+      "bg_light": "#F7F5F0",
+      "surface_dark": "#2A2E37",
+      "surface_light": "#EDEAE2",
+      "success": "#4C9A5B",
+      "warning": "#D9A441",
+      "danger": "#C1502E",
+      "text_dark_mode": "#EDEAE2",
+      "text_light_mode": "#1A1D23"
+    },
+    "rules": [
+      "Dark mode is the primary theme. Use #1A1D23 as the base app background and #2A2E37 for elevated surfaces.",
+      "Use #F2A93C (Warm Amber) sparingly as the primary CTA trigger to guide user action.",
+      "Moderation status MUST rigidly use #4C9A5B (Approved), #D9A441 (In-Review), and #C1502E (Rejected).",
+      "DO NOT use gradients on backgrounds. The retro-industrial terminal look relies on solid, matte colors.",
+      "Never use pure transparent backgrounds on overlays or headers. Use dense solid colors to keep data readable."
+    ]
+  },
+  "visual_enhancers": {
+    "surfaces": {
+      "style": "Retro-Futurism / Flat Hardware",
+      "borders": "1px solid #2A2E37 (dark mode) / 1px solid #1A1D23 (light mode) on almost all cards.",
+      "shadows": "Hard shadows (e.g., shadow-[4px_4px_0px_0px_#0F6E6E] or shadow-[4px_4px_0px_0px_#F2A93C] on hover for interactive elements) to emulate tactile buttons.",
+      "corners": "Sharp. Use rounded-none or maximum rounded-sm to maintain the industrial blocky feel."
+    },
+    "textures": [
+      "Subtle scanline overlays (repeating-linear-gradient) for hero sections and the Admin Anomaly Dashboard.",
+      "Monochrome noise overlays on dark surfaces to give a matte, tactile hardware feel."
+    ]
+  },
+  "layouts": {
+    "public_pages": {
+      "game_hub": "Bento Grid (Mode A). Asymmetrical layout with dominant hero games overlapping smaller mod collections. Use gap-8.",
+      "mod_detail": "Split layout. 70% left column for Markdown/Gallery/Changelogs, 30% right sticky sidebar for metadata, dependencies, stats, and download CTA.",
+      "spacing": "Generous spacing. Use p-8 or p-12 in major sections. Keep it breathable but punchy."
+    },
+    "admin_panel": {
+      "style": "High Density Grid (Mode B).",
+      "moderation_queue": "Dense tabular layout. Every row has strict height. Use Monospace for SLA timers and IDs. Right-aligned status dots (Green/Amber/Red).",
+      "spacing": "Tight gaps (gap-4). Every pixel counts in the Admin view to reduce scroll fatigue.",
+      "diff_view": "Side-by-side terminal-style diff window for version comparisons. Darker inset background with #4C9A5B additions and #C1502E deletions."
+    }
+  },
+  "component_strategies": {
+    "buttons": "Tactile, sharp-cornered buttons. Default to primary_brand (#0F6E6E) with text_dark_mode, but on hover, apply a hard transform (-translate-y-1) and hard shadow to pop off the screen.",
+    "badges": "For trust tiers (new, established, verified), use solid colored 1px borders and uppercase mono text (e.g., border-warning text-warning).",
+    "inputs_forms": "Square corners. 1px solid borders. Focus state must have a hard 2px ring of Warm Amber (#F2A93C).",
+    "mod_upload_wizard": "Step-based timeline UI using mono-spaced numbers. Clean, linear layout focusing on one task per screen.",
+    "toast_notifications": "Use Sonner. Style toasts to look like server log outputs (e.g., '[SUCCESS] Mod version 1.2.4 uploaded')."
+  },
+  "motion": {
+    "rules": [
+      "Motion should feel mechanical and snappy, not soft and bouncy. Keep durations short (150ms - 200ms).",
+      "Never use 'transition: all'. Explicitly transition 'transform' and 'background-color' or 'box-shadow'.",
+      "Hovering on a mod card should instantly apply a hard shadow and 1px transform, like pressing a physical key."
+    ]
+  },
+  "accessibility": {
+    "contrast": "Adhere to strict WCAG 2.1 AA/AAA contrast. Warm Amber (#F2A93C) must be readable against Charcoal Slate (#1A1D23).",
+    "testing_attributes": "All interactive elements, buttons, inputs, moderation actions, and tabs MUST include descriptive 'data-testid' attributes (e.g., data-testid='approve-mod-button').",
+    "focus_states": "All focusable elements must have visible, high-contrast focus rings. Do not rely on color alone for moderation statuses (use icons alongside green/amber/red dots)."
+  },
+  "image_urls": {
+    "game_hubs": {
+      "minecraft_abstract": "https://images.pexels.com/photos/17483907/pexels-photo-17483907.png"
+    },
+    "admin_hardware": {
+      "server_rack_1": "https://images.pexels.com/photos/17489151/pexels-photo-17489151.jpeg",
+      "server_rack_2": "https://images.pexels.com/photos/37730212/pexels-photo-37730212.jpeg"
+    },
+    "users": {
+      "gamer_avatar_1": "https://images.pexels.com/photos/28114093/pexels-photo-28114093.jpeg"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install the required fonts: Chivo, IBM Plex Sans, and IBM Plex Mono (Google Fonts).",
+    "Configure Tailwind with the exact Signal & Slate hex codes.",
+    "Use standard HTML/Tailwind for the public-facing pages (Game Hub, Mod Detail) to ensure creative layouts, and Shadcn UI heavily customized for the Admin Panel.",
+    "Build the UI in JS, NOT TSX.",
+    "For the Admin Panel, build a 'Diff View' component simulating a terminal layout. Use monospace fonts for version comparisons.",
+    "Do NOT use soft shadows or rounded-xl/2xl/3xl corners. Everything must feel like physical hardware (sharp, rigid).",
+    "Ensure the moderation workflow (Approve/Reject/Quarantine) uses the strict color semantics requested.",
+    "Ensure all data-testid attributes are applied to interactive elements for automated testing."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Avoid generic 'AI slop' aesthetics (centered layouts, simplistic gradients, uniform styling).",
+    "Create depth through hard/solid shadows rather than soft blurry dropshadows, keeping the hardware terminal vibe.",
+    "DO NOT apply universal transitions (e.g., 'transition: all').",
+    "DO NOT center align the app container (.App { text-align: center; } is strictly forbidden).",
+    "Use Phosphor Icons or Lucide-React with a sharp, linear weight.",
+    "NEVER use emojis as icons.",
+    "Provide micro-animations for hover states on all interactive elements (buttons, cards, links).",
+    "Use Sonner for toasts located in /app/src/components/ui/sonner.jsx.",
+    "You have .js files not .tsx files, so share the guideline for .js files not for .tsx files."
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "summary": "Full-stack test of Kivo (multi-game mod hosting). Created a pytest regression suite (69 tests, 5 files) covering public discovery/download, auth+RBAC, creator tools, admin/staff panel and engagement: 63 passed / 6 failed (91.3%). Playwright covered public home/browse/mod-detail/download, register+login (admin, creator, new user), creator dashboard + 4-step wizard + multipart version upload, and the whole admin panel (overview, review queue w/ approve+reason modal+version diff, reports SLA resolve/dismiss/filters, users & trust incl. trust tier/role/verify/shadow/ban/revoke, audit log, anomalies), plus review/comment submission and role scoping. Found and FIXED one page-breaking React crash on /admin/queue and /admin/reports. All 6 backend failures are genuine product gaps (no brute-force lockout, revoke-sessions is a no-op, no httpOnly cookie, unapproved mods publicly readable, age_confirm not enforced, blank comments accepted). All QA-created data was removed and the seeded state (9 mods, 6 users, quantum-tools-beta in_review, 2 open reports) was restored.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/auth/login", "issue": "No brute-force lockout/rate limiting. 6+ consecutive wrong passwords all return 401 with no throttle (playbook requires lockout after 5 fails). Credential stuffing is unmitigated.", "priority": "HIGH"},
+      {"endpoint": "POST /api/admin/users/{id}/revoke-sessions", "issue": "Only writes session_revoked_at; get_current_user never checks it, so previously issued JWTs remain valid for their full 7 days. The UI toast claims 'user force-logged-out' - a false security guarantee. Verified: /api/auth/me still returns 200 after revoke.", "priority": "HIGH"},
+      {"endpoint": "GET /api/mods/{slug}", "issue": "Returns mods of ANY status, so in_review / rejected / quarantined mods are publicly readable by slug (verified 200 on quantum-tools-beta). Should 404 unless status==approved or requester is owner/staff.", "priority": "HIGH"},
+      {"endpoint": "POST /api/admin/versions/{id}/moderate", "issue": "Approving a version unconditionally sets the parent mod status to 'approved' (server.py:607-608), so approving one version silently un-quarantines / un-rejects a mod that staff previously quarantined.", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/auth/login", "issue": "Never sets the httpOnly access_token cookie even though get_current_user reads request.cookies.get('access_token') (server.py:85) - dead code path; token lives only in localStorage (XSS-readable)."},
+      {"endpoint": "POST /api/auth/register", "issue": "age_confirm is declared on RegisterInput but never validated; registration with age_confirm=false succeeds with 200 (UI enforces it, API does not)."},
+      {"endpoint": "POST /api/mods/{slug}/comments", "issue": "Accepts blank/whitespace-only body (CommentInput.body has no min_length) - empty comments are persisted and rendered."},
+      {"endpoint": "POST /api/mods/{slug}/reviews", "issue": "Recomputes rating_count from stored reviews only, destroying seeded social proof: Arcane Ascension went 4.6 (2100 ratings) -> 4.0 (1) after one real review."},
+      {"endpoint": "POST /api/creator/mods/{id}/versions", "issue": "No file size cap (unbounded `await file.read()` into memory) and detected_type is only mimetypes.guess_type(filename) i.e. extension-based, while the UI claims 'Server-side type verification runs on upload'."},
+      {"endpoint": "CORS middleware", "issue": "allow_credentials=True combined with CORS_ORIGINS='*' is invalid per the CORS spec; browsers reject credentialed wildcard responses. Use explicit origins."},
+      {"endpoint": "seed()", "issue": "Seeded pending version for quantum-tools-beta has file_path='' - if a moderator approves it via the queue, /api/download/{id} returns 404 'File missing'."},
+      {"endpoint": "shadow_banned flag", "issue": "Settable via /api/admin/users/{id}/trust but never enforced anywhere - shadow-banned users' comments/reviews stay fully visible."},
+      {"endpoint": "/api/mods, /api/admin/users, /api/admin/audit", "issue": "No pagination; hard-coded to_list(50/300/500) caps will silently truncate at scale."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ReviewQueue.jsx / Reports.jsx", "issue": "FIXED BY TESTER: `useEffect(load, [])` passed an async fn returning a Promise, so React called the Promise as the cleanup fn -> uncaught 'TypeError: destroy is not a function'. The CRA error overlay covered the entire /admin/queue and /admin/reports pages, making the review queue and reports queue unusable. Changed to useEffect(() => { load(); }, [...]).", "selector": "[data-testid='admin-nav-review']", "priority": "CRITICAL (fixed)"},
+      {"component": "AdminLayout.jsx", "issue": "All 6 sidebar items are shown to every staff role. As content_reviewer, clicking 'Users & Trust' loads a permanently blank page with only an 'Insufficient role' toast. Hide/disable non-permitted nav items and render an inline permission-denied state.", "selector": "[data-testid='admin-nav-users']", "priority": "MEDIUM"},
+      {"component": "Browse.jsx", "issue": "Search only fires on Enter (form submit). There is no visible submit button and no debounced live filtering, so typing appears to do nothing (verified: 3s after typing 'shader' all 12 cards remained; pressing Enter correctly narrowed to 1).", "selector": "[data-testid='browse-search-input']", "priority": "MEDIUM"},
+      {"component": "Navbar (mobile 390px)", "issue": "No hamburger menu; Browse / Minecraft links are hidden on mobile, leaving only a search icon, avatar and logout. Primary navigation is unreachable on phones.", "selector": "[data-testid='nav-search']", "priority": "LOW"},
+      {"component": "ReviewQueue.jsx action buttons", "issue": "approve / request-changes / reject / quarantine are icon-only with no labels or tooltips - destructive vs non-destructive actions are indistinguishable.", "selector": "[data-testid$='-quarantine']", "priority": "LOW"},
+      {"component": "CreatorDashboard.jsx", "issue": "'AVG RATING' averages rating_avg across ALL mods including brand-new 0-rated ones, showing a misleadingly low 3.04 for a creator whose live mods are all 4.4-4.9. Average only rated mods.", "selector": "[data-testid='new-mod-btn']", "priority": "LOW"}
+    ],
+    "integration_issues": [
+      {"flow": "Admin -> Users & Trust -> revoke sessions", "issue": "UI shows success toast '[SESSIONS] Revoked - user force-logged-out' but the backend does not invalidate the token, so the target user stays logged in. Misleading confirmation for a security action.", "affected_selectors": ["[data-testid^='revoke-']"]},
+      {"flow": "Staff role scoping", "issue": "Forbidden admin sub-pages render their full chrome (title, search box, empty table) with only a toast, giving no persistent indication that access was denied.", "affected_selectors": ["[data-testid='user-search']"]}
+    ],
+    "design_issues": [
+      {"screen": "Home / Login marketing copy", "issues": ["Home hero claims 'Every upload - and every new version - is scanned'; feature tiles claim 'Multi-stage pre-screen / AV + static analysis' - the scanning pipeline was intentionally SKIPPED in this build, so this is a false security claim to end users", "Feature tile 'OAuth-only accounts / No password to breach' contradicts the actual JWT email/password auth (and the Google/Discord buttons are disabled placeholders)", "Login hero repeats 'Every upload is scanned.'", "UploadVersionModal says 'Server-side type verification runs on upload' but only mimetypes.guess_type(filename) runs"]},
+      {"screen": "Admin panel (verified OK)", "issues": ["Layout, spacing, contrast and the retro-industrial theme render correctly at 1920x1080; no horizontal overflow at 390px on /browse"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_public.py",
+    "/app/backend/tests/test_auth.py",
+    "/app/backend/tests/test_creator.py",
+    "/app/backend/tests/test_admin.py",
+    "/app/backend/tests/test_engagement.py",
+    "/app/backend/tests/cleanup_qa_data.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Add login rate limiting / account lockout after 5 failed attempts (currently unlimited 401s).",
+    "Enforce revoke-sessions: store session_revoked_at and reject tokens issued before it in get_current_user (or add an iat check) - today the action is a no-op behind a success toast.",
+    "Gate GET /api/mods/{slug} on status=='approved' unless the caller is the owner or staff; unapproved submissions are currently public.",
+    "Fix moderate_version: approving a version must not resurrect a rejected/quarantined parent mod.",
+    "Validate age_confirm on POST /api/auth/register and add min_length to CommentInput.body.",
+    "Preserve or clearly separate seeded rating_count from real reviews so posting one review doesn't drop a mod from 4.6 (2100) to 4.0 (1).",
+    "Set explicit CORS origins instead of '*' since allow_credentials=True.",
+    "Add an upload size cap and real content-based type sniffing (magic bytes) for version files, or soften the UI copy.",
+    "Hide/disable admin sidebar items the current staff role cannot access and render an inline permission-denied panel instead of a blank page + toast.",
+    "Make Browse search debounce live (or add a visible Search button) - typing currently appears to do nothing.",
+    "Rewrite Home/Login marketing copy: remove 'scanned / AV + static analysis' and 'OAuth-only accounts / No password to breach' claims that this build does not implement.",
+    "Add a mobile hamburger menu so Browse/Minecraft are reachable under 768px.",
+    "Give a version file to the seeded quantum-tools-beta version so approving it from the queue yields a working download."
+  ],
+  "critical_code_review_comments": [
+    "Never pass an async/Promise-returning function directly to useEffect - React treats the return value as the cleanup fn. This pattern also exists (harmlessly today) in CreatorDashboard.jsx:22 `useEffect(load, [])`; convert it too before `load` becomes async.",
+    "get_current_user reads a cookie that login never sets (server.py:85) - either implement the httpOnly cookie flow or delete the dead branch; `get_optional_user` (server.py:102) is also defined but never used.",
+    "Admin authorization is enforced only server-side per-endpoint while the client renders every nav item; keep the server checks but derive the visible nav from a shared role->permission map so UI and API cannot drift.",
+    "server.py is a single 876-line module mixing auth, public, creator, admin and seeding - split into routers (auth/public/creator/admin) plus a seed module before it grows further.",
+    "app.on_event('startup'/'shutdown') is deprecated; migrate to the FastAPI lifespan context manager.",
+    "Every list endpoint uses a hard-coded to_list(N) with no skip/limit params - add pagination now while the response shapes are still cheap to change."
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/admin/ReviewQueue.jsx",
+    "/app/frontend/src/pages/admin/Reports.jsx",
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_public.py",
+    "/app/backend/tests/test_auth.py",
+    "/app/backend/tests/test_creator.py",
+    "/app/backend/tests/test_admin.py",
+    "/app/backend/tests/test_engagement.py",
+    "/app/backend/tests/cleanup_qa_data.py"
+  ],
+  "success_rate": {"backend": "91% (63/69 pytest)", "frontend": "90% (all critical flows pass after the admin-queue crash fix; remaining issues are UX/content)"},
+  "seed_data_creation": "Test accounts were registered on the @kivoqa.io domain and test mods/versions/reviews/comments were created, then ALL of it was deleted by /app/backend/tests/cleanup_qa_data.py. Seeded state was restored and verified: 9 mods, 6 users, quantum-tools-beta back to in_review with 1 pending version, 2 open reports (malware=critical, harassment). NOTE: pytest and Playwright runs re-create @kivoqa.io data; re-run `python /app/backend/tests/cleanup_qa_data.py` from /app/backend afterwards. Also note the email-validator rejects special-use TLDs (.test/.example) - use @kivoqa.io for synthetic accounts.",
+  "should_call_test_agent_after_fix": true,
+  "should_main_agent_self_test": false,
+  "test_credentials": "/app/memory/test_credentials.md is present and fully accurate - admin@kivo.dev/KivoAdmin!2026 (super_admin), creator@kivo.dev/Creator!2026 (verified), and all four Staff!2026 staff accounts logged in successfully with the documented roles.",
+  "context_for_next_testing_agent": "Regression suite lives in /app/backend/tests (conftest.py + test_public/test_auth/test_creator/test_admin/test_engagement). Run: `cd /app/backend && python -m pytest tests/ -q --junitxml=/app/test_reports/pytest/pytest_results.xml` (pytest.ini forces -n 2 --dist loadscope; do not edit it). Six tests are intentional red flags for the gaps listed above - they should flip green once fixed: test_brute_force_lockout, test_login_sets_httponly_cookie, test_revoke_sessions_invalidates_token, test_unapproved_mod_detail_exposure, test_register_age_confirm_enforced, test_empty_comment_rejected. Everything else already passes, including full CRUD/moderation/trust flows. Playwright verified end-to-end: home/browse(filters+Enter-search)/mod detail(4 tabs + real file download that increments the counter), register(age-confirm gating)/login, creator dashboard(KPIs+14-day recharts+11 project rows)/4-step wizard auto-publish/multipart version upload, admin overview/queue(approve+diff modal+reason modal)/reports(resolve+dismiss+4 filters)/users(trust select+role select+verify/shadow/ban/revoke+search)/audit(49 entries, newest-first, moderation actions appear)/anomalies(3 panels). Non-staff and creator accounts are correctly redirected off /admin. Remember the tool-side gotcha: don't put escaped quotes or backslashes inside Playwright f-strings.",
+  "rca_of_the_issue": "Admin queue/reports crash: ReviewQueue.jsx:13 and Reports.jsx:21 used `useEffect(load, deps)` where `load = () => api.get(...).then(...)` returns a Promise. React 18/19 invokes the effect's return value as the destroy/cleanup function, so on unmount it threw 'TypeError: destroy is not a function' (commitHookEffectListUnmount -> destroy is not a function). In dev the CRA error overlay then covered the whole page, making the Review Queue and Reports & Abuse screens appear completely broken. Repro: log in as admin@kivo.dev, visit /admin/queue, navigate away. Fix applied: wrap in `useEffect(() => { load(); }, deps)` so the effect returns undefined. Verified afterwards with zero pageerrors across all 13 routes."
+}
