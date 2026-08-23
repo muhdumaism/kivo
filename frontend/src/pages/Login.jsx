@@ -2,99 +2,87 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { apiError } from "@/lib/api";
-import { Box, Terminal, AlertCircle } from "lucide-react";
+import { ParallaxCubes } from "@/components/kivo/ParallaxCubes";
+import { CornerFrame } from "@/components/kivo/CornerFrame";
+import { Shield, Loader2 } from "lucide-react";
 
 export default function Login() {
-  const { login, register } = useAuth();
+  const { demo } = useAuth();
   const nav = useNavigate();
-  const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ email: "", password: "", name: "", age_confirm: false });
+  const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
-  const [busy, setBusy] = useState(false);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setErr(""); setBusy(true);
-    try {
-      if (mode === "login") await login(form.email, form.password);
-      else {
-        if (!form.age_confirm) { setErr("You must confirm you are 13 or older."); setBusy(false); return; }
-        await register(form);
-      }
-      nav("/");
-    } catch (e) { setErr(apiError(e.response?.data?.detail) || e.message); }
-    setBusy(false);
+  const go = async (provider) => {
+    setBusy(provider); setErr("");
+    try { await demo(provider); nav(provider === "staff" ? "/admin" : "/"); }
+    catch (e) { setErr(apiError(e.response?.data?.detail) || e.message); setBusy(""); }
   };
 
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
-
   return (
-    <div className="min-h-screen bg-charcoal grid lg:grid-cols-2">
-      <div className="relative hidden lg:flex flex-col justify-between p-12 border-r border-slate grain overflow-hidden">
-        <div className="absolute inset-0 scanlines opacity-30" />
+    <div className="min-h-screen bg-ink grid lg:grid-cols-2">
+      {/* Left brand */}
+      <div className="relative hidden lg:flex flex-col justify-between p-12 mesh-bg overflow-hidden">
+        <ParallaxCubes />
+        <div className="absolute inset-0 grain" />
         <Link to="/" className="relative flex items-center gap-2">
-          <div className="w-10 h-10 bg-teal grid place-items-center border border-teal-light"><Box className="w-6 h-6 text-warm" /></div>
-          <span className="font-heading font-black text-2xl tracking-tighter text-warm">KIVO</span>
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet to-coral grid place-items-center"><span className="font-pixel text-ink text-xl">K</span></div>
+          <span className="font-pixel text-3xl text-warm">kivo</span>
         </Link>
         <div className="relative">
-          <h2 className="font-heading text-4xl font-black uppercase tracking-tighter text-warm leading-tight">The safest way<br />to ship & get mods.</h2>
-          <p className="text-warm/60 mt-4 max-w-sm">Every upload is reviewed by staff. Every new version re-checked. Accounts protected by trust tiers and staff session revocation.</p>
+          <span className="font-pixel text-[20vw] leading-none text-stroke absolute -bottom-10 -left-4 select-none">99</span>
+          <h2 className="relative font-heading text-4xl font-extrabold text-warm leading-tight">Log in with the accounts you already have.</h2>
+          <p className="relative text-lavender2/70 mt-4 max-w-sm">No passwords, no forms. Connect with Google or Discord and start grabbing drops in one tap.</p>
         </div>
-        <p className="relative font-mono text-xs text-warm/30">// signal &amp; slate</p>
+        <p className="relative font-mono text-xs text-lavender2/30">// the minecraft marketplace</p>
       </div>
 
+      {/* Right auth */}
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <div className="flex gap-1 mb-8 border border-slate-light">
-            {["login", "register"].map((m) => (
-              <button key={m} data-testid={`tab-${m}`} onClick={() => { setMode(m); setErr(""); }}
-                className={`flex-1 py-2.5 font-mono text-xs uppercase tracking-widest transition-colors ${mode === m ? "bg-amber text-charcoal font-bold" : "text-warm/60 hover:text-warm"}`}>
-                {m === "login" ? "Sign In" : "Create Account"}
-              </button>
-            ))}
+          <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet to-coral grid place-items-center"><span className="font-pixel text-ink text-lg">K</span></div>
+            <span className="font-pixel text-2xl text-warm">kivo</span>
           </div>
 
-          <form onSubmit={submit} className="space-y-4">
-            {mode === "register" && (
-              <Field label="Display Name" testid="name-input" value={form.name} onChange={set("name")} placeholder="AuroraDev" />
-            )}
-            <Field label="Email" testid="email-input" type="email" value={form.email} onChange={set("email")} placeholder="you@example.com" />
-            <Field label="Password" testid="password-input" type="password" value={form.password} onChange={set("password")} placeholder="••••••••" />
+          <h1 className="font-heading text-3xl font-extrabold text-warm text-center">Connect to Kivo</h1>
+          <p className="text-lavender2/60 text-center mt-2 text-sm">Pick a provider to continue</p>
 
-            {mode === "register" && (
-              <label className="flex items-start gap-2 text-xs text-warm/60 font-mono">
-                <input data-testid="age-confirm" type="checkbox" checked={form.age_confirm} onChange={set("age_confirm")} className="mt-0.5 accent-amber" />
-                I confirm I am 13 years or older (COPPA)
-              </label>
-            )}
-
-            {err && <p data-testid="auth-error" className="flex items-center gap-2 text-rust text-sm font-mono"><AlertCircle className="w-4 h-4" />{err}</p>}
-
-            <button data-testid="auth-submit-btn" disabled={busy} type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-amber text-charcoal py-3 font-mono font-bold uppercase tracking-wide hover:-translate-y-0.5 transition-transform hard-shadow-teal disabled:opacity-50">
-              <Terminal className="w-4 h-4" />{busy ? "..." : mode === "login" ? "Sign In" : "Create Account"}
+          <div className="space-y-3 mt-8">
+            <button data-testid="google-login-btn" onClick={() => go("google")} disabled={busy}
+              className="w-full flex items-center justify-center gap-3 bg-white text-[#3c4043] py-3.5 rounded-full font-semibold hover:-translate-y-0.5 transition-transform disabled:opacity-60">
+              {busy === "google" ? <Loader2 className="w-5 h-5 animate-spin" /> : <GoogleIcon />} Continue with Google
             </button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-slate">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-3 text-center">OAuth login (configure keys)</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button disabled title="Add GOOGLE_CLIENT_ID in backend/.env" className="py-2.5 border border-slate-light text-warm/40 font-mono text-xs uppercase cursor-not-allowed">Google</button>
-              <button disabled title="Add DISCORD_CLIENT_ID in backend/.env" className="py-2.5 border border-slate-light text-warm/40 font-mono text-xs uppercase cursor-not-allowed">Discord</button>
-            </div>
+            <button data-testid="discord-login-btn" onClick={() => go("discord")} disabled={busy}
+              className="w-full flex items-center justify-center gap-3 bg-[#5865F2] text-white py-3.5 rounded-full font-semibold hover:-translate-y-0.5 transition-transform disabled:opacity-60">
+              {busy === "discord" ? <Loader2 className="w-5 h-5 animate-spin" /> : <DiscordIcon />} Continue with Discord
+            </button>
           </div>
+
+          {err && <p data-testid="auth-error" className="text-rose text-sm text-center mt-4 font-mono">{err}</p>}
+
+          <p className="font-mono text-[10px] text-center text-lavender2/40 mt-5 leading-relaxed">
+            Demo mode — one tap signs you in instantly.<br />Real OAuth activates once client keys are added.
+          </p>
+
+          <CornerFrame color="violet" className="mt-8 bg-plum/50 border border-plumborder rounded-2xl p-4">
+            <button data-testid="staff-login-btn" onClick={() => go("staff")} disabled={busy}
+              className="w-full flex items-center justify-center gap-2 text-lavender2/70 hover:text-coral2 text-xs font-mono uppercase tracking-widest transition-colors">
+              {busy === "staff" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />} Enter staff panel (demo)
+            </button>
+          </CornerFrame>
+
+          <p className="text-center mt-8"><Link to="/" className="text-lavender2/50 hover:text-warm text-sm">← Back home</Link></p>
         </div>
       </div>
     </div>
   );
 }
 
-function Field({ label, testid, type = "text", value, onChange, placeholder }) {
+function GoogleIcon() {
   return (
-    <div>
-      <label className="block font-mono text-[10px] uppercase tracking-widest text-warm/50 mb-1.5">{label}</label>
-      <input data-testid={testid} type={type} value={value} onChange={onChange} placeholder={placeholder}
-        className="w-full bg-slate border border-slate-light p-3 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-amber" />
-    </div>
+    <svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
   );
+}
+function DiscordIcon() {
+  return <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>;
 }

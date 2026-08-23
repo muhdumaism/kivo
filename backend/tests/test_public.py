@@ -50,9 +50,9 @@ def test_mods_filters():
 
 
 def test_mods_search_and_sort():
-    r = requests.get(f"{API}/mods", params={"q": "lithium"}, timeout=30)
+    r = requests.get(f"{API}/mods", params={"q": "aether"}, timeout=30)
     assert r.status_code == 200
-    assert "Lithium Performance" in [m["title"] for m in r.json()]
+    assert "Aether Knight" in [m["title"] for m in r.json()]
 
     r = requests.get(f"{API}/mods", params={"sort": "downloads"}, timeout=30)
     dls = [m["downloads"] for m in r.json()]
@@ -63,11 +63,11 @@ def test_mods_search_and_sort():
 
 
 def test_mod_detail_shape():
-    r = requests.get(f"{API}/mods/lithium-performance", timeout=30)
+    r = requests.get(f"{API}/mods/aether-knight", timeout=30)
     assert r.status_code == 200
     mod = r.json()
-    assert mod["title"] == "Lithium Performance"
-    assert mod["description"].startswith("# Lithium")
+    assert mod["title"] == "Aether Knight"
+    assert mod["description"].startswith("#")
     assert isinstance(mod["versions"], list) and len(mod["versions"]) >= 1
     assert isinstance(mod["reviews"], list)
     assert "1.0.0" in [v["version_number"] for v in mod["versions"]]
@@ -76,21 +76,21 @@ def test_mod_detail_shape():
 
 
 def test_comments_endpoint():
-    r = requests.get(f"{API}/mods/lithium-performance/comments", timeout=30)
+    r = requests.get(f"{API}/mods/aether-knight/comments", timeout=30)
     assert r.status_code == 200
     assert isinstance(r.json(), list)
     assert requests.get(f"{API}/mods/nope-nope/comments", timeout=30).status_code == 404
 
 
 def test_download_increments_count():
-    detail = requests.get(f"{API}/mods/lithium-performance", timeout=30).json()
+    detail = requests.get(f"{API}/mods/aether-knight", timeout=30).json()
     before = detail["downloads"]
     vid = detail["versions"][0]["id"]
     d = requests.get(f"{API}/download/{vid}", timeout=60)
     assert d.status_code == 200
     assert "attachment" in d.headers.get("content-disposition", "")
     assert len(d.content) > 0
-    after = requests.get(f"{API}/mods/lithium-performance", timeout=30).json()["downloads"]
+    after = requests.get(f"{API}/mods/aether-knight", timeout=30).json()["downloads"]
     assert after == before + 1
 
 
@@ -100,5 +100,5 @@ def test_download_unknown_version_404():
 
 def test_unapproved_mod_detail_exposure():
     """Pending mod detail should not be publicly readable (privacy of in_review content)."""
-    r = requests.get(f"{API}/mods/quantum-tools-beta", timeout=30)
+    r = requests.get(f"{API}/mods/neon-golem-beta", timeout=30)
     assert r.status_code == 404, f"in_review mod is publicly readable (status={r.json().get('status')})"

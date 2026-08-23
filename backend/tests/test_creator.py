@@ -69,14 +69,15 @@ def test_create_mod_validation(creator_session):
     assert creator_session.post(f"{API}/creator/mods", json={"title": "", "game_slug": "minecraft"}, timeout=30).status_code == 400
     r = creator_session.post(f"{API}/creator/mods", json={"title": "TEST_BadGame", "game_slug": "not-a-game"}, timeout=30)
     assert r.status_code == 400
-    # missing game_slug entirely should not 500
+    # Minecraft-only marketplace: missing game_slug now defaults to minecraft (by design)
     r = creator_session.post(f"{API}/creator/mods", json={"title": "TEST_NoGame"}, timeout=30)
-    assert r.status_code in (400, 422), f"missing game_slug produced {r.status_code}"
+    assert r.status_code == 200, f"missing game_slug produced {r.status_code}"
+    assert r.json()["game_slug"] == "minecraft"
 
 
 def test_upload_version_verified_creator(creator_session):
     mods = creator_session.get(f"{API}/creator/mods", timeout=30).json()
-    mod = next(m for m in mods if m["slug"] == "lithium-performance")
+    mod = next(m for m in mods if m["slug"] == "aether-knight")
     vnum = f"9.9.{uuid.uuid4().hex[:3]}"
     files = {"file": ("test-artifact.jar", io.BytesIO(b"PK\x03\x04TEST-JAR-CONTENT" * 100), "application/java-archive")}
     r = creator_session.post(f"{API}/creator/mods/{mod['id']}/versions", data={
@@ -91,7 +92,7 @@ def test_upload_version_verified_creator(creator_session):
     assert v["mod_loaders"] == ["Fabric"]
     assert v["file_size"] > 0 and v["compressed_size"] > 0
     # persisted + downloadable
-    detail = requests.get(f"{API}/mods/lithium-performance", timeout=30).json()
+    detail = requests.get(f"{API}/mods/aether-knight", timeout=30).json()
     assert vnum in [x["version_number"] for x in detail["versions"]]
     d = requests.get(f"{API}/download/{v['id']}", timeout=60)
     assert d.status_code == 200

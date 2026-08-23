@@ -30,6 +30,13 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const demo = async (provider) => {
+    const { data } = await api.post("/auth/demo", { provider });
+    localStorage.setItem("kivo_token", data.token);
+    setUser(data.user);
+    return data.user;
+  };
+
   const logout = () => {
     localStorage.removeItem("kivo_token");
     setUser(false);
@@ -42,7 +49,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, ready, login, register, logout, refresh, setUser }}>
+    <AuthContext.Provider value={{ user, ready, login, register, demo, logout, refresh, setUser }}>
       {children}
     </AuthContext.Provider>
   );

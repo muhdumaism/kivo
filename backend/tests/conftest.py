@@ -21,10 +21,14 @@ def admin_creds():
     if not path.exists():
         pytest.skip("missing /app/memory/test_credentials.md")
     txt = path.read_text(encoding="utf-8")
+    # supports "Email: `x`/Password: `y`" and "- Super admin: `x` / `y` (super_admin)"
+    m = re.search(r"(?im)^\s*[-*]?\s*(?:\*\*)?Super admin(?:\*\*)?\s*:\s*`([^`]+)`\s*/\s*`([^`]+)`", txt)
+    if m:
+        return {"email": m.group(1), "password": m.group(2)}
     email = re.search(r"Email:\s*`([^`]+)`", txt)
     pwd = re.search(r"Password:\s*`([^`]+)`", txt)
     if not email or not pwd:
-        pytest.skip("admin creds not parseable from test_credentials.md")
+        pytest.fail("admin creds not parseable from /app/memory/test_credentials.md")
     return {"email": email.group(1), "password": pwd.group(1)}
 
 

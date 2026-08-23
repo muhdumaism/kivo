@@ -82,6 +82,13 @@ def slugify(text: str) -> str:
     return s or uuid.uuid4().hex[:8]
 
 
+def get_client_ip(request: Request) -> str:
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
 async def get_current_user(request: Request) -> dict:
     auth = request.headers.get("Authorization", "")
     token = auth[7:] if auth.startswith("Bearer ") else request.cookies.get("access_token")
@@ -221,8 +228,8 @@ async def register(data: RegisterInput):
 @api.post("/auth/login")
 async def login(data: LoginInput, request: Request):
     email = data.email.lower()
-    ip = request.client.host if request.client else "unknown"
-    ident = f"{ip}:{email}"
+    ip = get_client_ip(request)
+    ident = f"{email}|{ip}"
     attempt = await db.login_attempts.find_one({"identifier": ident})
     if attempt and attempt.get("count", 0) >= 5:
         locked_until = attempt.get("locked_until")
@@ -243,6 +250,19 @@ async def login(data: LoginInput, request: Request):
     await db.login_attempts.delete_one({"identifier": ident})
     token = create_token(user["id"], email)
     return {"token": token, "user": clean_user(user)}
+
+
+@api.post("/auth/demo")
+async def demo_login(payload: dict):
+    # One-tap demo sign-in that stands in for OAuth until real Google/Discord keys are added.
+    provider = (payload.get("provider") or "google").lower()
+    email_map = {"google": "creator@kivo.dev", "discord": "blockfan@kivo.dev", "staff": "admin@kivo.dev"}
+    email = email_map.get(provider, "creator@kivo.dev")
+    user = await db.users.find_one({"email": email})
+    if not user:
+        raise HTTPException(status_code=404, detail="Demo account missing")
+    token = create_token(user["id"], email)
+    return {"token": token, "user": clean_user(user), "provider": provider}
 
 
 @api.get("/auth/me")
@@ -288,6 +308,8 @@ async def get_game(slug: str):
 async def list_mods(
     game: Optional[str] = None,
     category: Optional[str] = None,
+    item_type: Optional[str] = None,
+    rarity: Optional[str] = None,
     tag: Optional[str] = None,
     loader: Optional[str] = None,
     game_version: Optional[str] = None,
@@ -301,6 +323,10 @@ async def list_mods(
         query["game_slug"] = game
     if category:
         query["category"] = category
+    if item_type:
+        query["item_type"] = item_type
+    if rarity:
+        query["rarity"] = rarity
     if tag:
         query["tags"] = tag
     if loader:
@@ -399,7 +425,15 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
     title = payload.get("title", "").strip()
     if not title:
         raise HTTPException(status_code=400, detail="Title is required")
-    game = await db.games.find_one({"slug": payload.get("game_slug")})
+    valid_types = ["Skin", "Character", "Build", "World", "Mod", "Collectible"]
+    valid_rarities = ["Common", "Rare", "Epic", "Legendary"]
+    item_type = payload.get("item_type", "Mod")
+    if item_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"Invalid item type. Choose one of: {', '.join(valid_types)}")
+    rarity = payload.get("rarity") or "Common"
+    if rarity not in valid_rarities:
+        raise HTTPException(status_code=400, detail=f"Invalid rarity. Choose one of: {', '.join(valid_rarities)}")
+    game = await db.games.find_one({"slug": payload.get("game_slug", "minecraft")})
     if not game:
         raise HTTPException(status_code=400, detail="Invalid game")
     slug = slugify(title)
@@ -413,11 +447,15 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
         "title": title,
         "summary": payload.get("summary", "")[:300],
         "description": payload.get("description", ""),
-        "game_slug": payload["game_slug"],
+        "game_slug": payload.get("game_slug", "minecraft"),
         "game_name": game["name"],
         "author_id": user["id"],
         "author_name": user["name"],
         "author_verified": bool(user.get("verified_creator")),
+        "item_type": payload.get("item_type", "Mod"),
+        "rarity": rarity,
+        "pricing": "free",
+        "price": 0,
         "category": payload.get("category", "Utility"),
         "tags": payload.get("tags", [])[:8],
         "mod_loaders": payload.get("mod_loaders", []),
@@ -792,56 +830,91 @@ async def seed():
                 "two_factor_enabled": True, "created_at": now_iso(),
             })
 
-    # game
+    # game / hub
     if not await db.games.find_one({"slug": "minecraft"}):
         await db.games.insert_one({
             "id": str(uuid.uuid4()), "slug": "minecraft", "name": "Minecraft",
-            "tagline": "The world's best-selling sandbox. Endlessly moddable.",
-            "description": "Minecraft has the largest modding ecosystem of any game. From tech and magic overhauls to shaders and quality-of-life tweaks, Kivo hosts them all with full malware review.",
+            "tagline": "Skins, builds, mods & collectibles — curated for the block universe.",
+            "description": "Kivo is the Minecraft marketplace. Grab hand-crafted skins, characters, builds, worlds, mods and blocky collectibles — every drop reviewed by real humans before it lands.",
             "banner": "https://images.pexels.com/photos/17483907/pexels-photo-17483907.png",
             "icon": "https://api.dicebear.com/7.x/shapes/svg?seed=minecraft",
-            "categories": ["Technology", "Magic", "Adventure", "Utility", "Worldgen", "Shaders", "Library", "Storage"],
+            "item_types": ["Skin", "Character", "Build", "World", "Mod", "Collectible"],
+            "rarities": ["Common", "Rare", "Epic", "Legendary"],
+            "categories": ["Skin", "Character", "Build", "World", "Mod", "Collectible"],
             "mod_loaders": ["Fabric", "Forge", "NeoForge", "Quilt"],
             "versions": ["1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.2", "1.18.2", "1.16.5"],
         })
 
-    # demo creator + mods
+    # demo creator + items
     creator = await db.users.find_one({"email": "creator@kivo.dev"})
     if not creator:
         creator = {
             "id": str(uuid.uuid4()), "email": "creator@kivo.dev", "password_hash": hash_password("Creator!2026"),
-            "name": "AuroraDev", "avatar_url": "https://api.dicebear.com/7.x/identicon/svg?seed=auroradev",
+            "name": "AuroraBlocks", "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=auroradev",
             "role": "user", "trust_tier": "verified", "verified_creator": True, "banned": False,
-            "shadow_banned": False, "bio": "Building performance mods since 2016.", "following": [],
-            "linked_providers": ["discord"], "two_factor_enabled": True, "created_at": now_iso(),
+            "shadow_banned": False, "bio": "Voxel artist & mod-maker. Drops every Friday.", "following": [],
+            "linked_providers": ["google", "discord"], "two_factor_enabled": True, "created_at": now_iso(),
         }
         await db.users.insert_one(dict(creator))
 
+    # demo discord player account (for one-tap demo login)
+    if not await db.users.find_one({"email": "blockfan@kivo.dev"}):
+        await db.users.insert_one({
+            "id": str(uuid.uuid4()), "email": "blockfan@kivo.dev", "password_hash": hash_password("BlockFan!2026"),
+            "name": "BlockFan", "avatar_url": "https://api.dicebear.com/7.x/bottts/svg?seed=blockfan",
+            "role": "user", "trust_tier": "new", "verified_creator": False, "banned": False,
+            "shadow_banned": False, "bio": "Just here for the drops.", "following": [],
+            "linked_providers": ["discord"], "two_factor_enabled": False, "created_at": now_iso(),
+        })
+
+    IMG = "https://static.prod-images.emergentagent.com/jobs/925bbe81-6f0f-4229-9aa9-4cbb889d5eb1/images/"
+    imgs = {
+        "hero_knight": IMG + "2409c73f1921782fe1be9b54adbb23637d86138d5cbc36ca52108cbba2d2cd62.jpeg",
+        "skin_explorer": IMG + "2dc88fc83132735b5ec2bf7b9a0aae0d3af6de27d1e3957dd54d60a3d49692dc.jpeg",
+        "skin_robot": IMG + "22d3e3f21a91d3417e53f30f2e9cd335249d67a726f0cd1376e53848446bd98b.jpeg",
+        "build_castle": IMG + "bb8adeaa2fc06dab2670dec9260c1848224ec55ecaa04ff0ebff15e5e34d4f52.jpeg",
+        "world_island": IMG + "e0f82de9f54ae28108eb67279312fbff193876bee8c690433444433d5f06333a.jpeg",
+        "mod_portal": IMG + "6c8f9434e7bd791691f9329ee092410bed8a9874b4233f7cc752a20ca75bbbf8.jpeg",
+        "collectible_pig": IMG + "a1bb25de0c276cc9b844bef35d3b95d680a4e6016280009ef4b0fa9de154e41d.jpeg",
+        "collectible_fox": IMG + "103a9f9d337d4372ccf7f2ab85062a802351e6b9ae7a557c8015845cca517443.jpeg",
+        "collectible_dragon": IMG + "6b3db9a86430953d31edd4ebb58c3aa6dcf5b2ee9afee9f9a58a24945e8ec372.jpeg",
+        "skin_ninja": IMG + "6676703c1591f660a7a2c85a10ce2df5106abba1c54479d36e3d17ad1081b008.jpeg",
+    }
+
     if await db.mods.count_documents({}) == 0:
+        # (title, summary, item_type, rarity, tags, loaders, gvs, dls, rating, rcount, pick, img)
         demo = [
-            ("Lithium Performance", "General-purpose optimization mod that improves server tick performance.", "Utility", ["performance", "optimization", "server"], ["Fabric", "Quilt"], ["1.21.4", "1.20.1"], 2_140_000, 4.9, 12000, True, "approved"),
-            ("Complementary Shaders", "Feature-rich shaderpack with stunning lighting and reflections.", "Shaders", ["shaders", "graphics", "lighting"], ["Fabric", "Forge"], ["1.21.4", "1.20.4"], 1_680_000, 4.8, 8800, True, "approved"),
-            ("Create: Machines", "Build contraptions and automate everything with rotational power.", "Technology", ["tech", "automation", "machines"], ["Forge", "NeoForge"], ["1.20.1", "1.19.2"], 980_000, 4.7, 5400, False, "approved"),
-            ("Arcane Ascension", "A deep magic overhaul adding spellcrafting and mana systems.", "Magic", ["magic", "spells", "rpg"], ["Fabric"], ["1.21.1"], 320_000, 4.6, 2100, False, "approved"),
-            ("Terralith Worldgen", "Overhauls world generation with 85+ new biomes.", "Worldgen", ["worldgen", "biomes", "terrain"], ["Fabric", "Forge"], ["1.21.4", "1.20.1"], 1_240_000, 4.9, 6600, True, "approved"),
-            ("Sodium Extra", "Extra options and tweaks built on top of the Sodium renderer.", "Utility", ["performance", "graphics"], ["Fabric"], ["1.21.4"], 760_000, 4.7, 3300, False, "approved"),
-            ("Dungeon Dwellers", "Adds procedurally generated dungeons and boss encounters.", "Adventure", ["adventure", "dungeons", "bosses"], ["Forge"], ["1.20.1"], 210_000, 4.4, 1500, False, "approved"),
-            ("Iron Chests Reforged", "Bigger, better storage chests in a range of materials.", "Storage", ["storage", "utility"], ["NeoForge", "Forge"], ["1.21.1", "1.20.4"], 540_000, 4.5, 2800, False, "approved"),
+            ("Aether Knight", "A legendary armored hero skin with a glowing runeblade.", "Character", "Legendary", ["armor", "hero", "rpg"], [], ["1.21.4", "1.20.1"], 128000, 4.9, 3400, True, "hero_knight"),
+            ("Shadow Ninja", "Stealthy ninja skin wrapped in a signature coral scarf.", "Skin", "Epic", ["ninja", "stealth", "skin"], [], ["1.21.1"], 88000, 4.8, 2100, True, "skin_ninja"),
+            ("Nether Gate Reforged", "Reimagined portals with custom dimensions and particle FX.", "Mod", "Legendary", ["portal", "dimension", "magic"], ["Fabric", "Forge"], ["1.21.4", "1.20.1"], 210000, 4.9, 5200, True, "mod_portal"),
+            ("Skyhold Castle", "A drop-in fantasy castle build with towers and courtyards.", "Build", "Epic", ["castle", "medieval", "build"], [], ["1.21.4", "1.20.4"], 96000, 4.8, 2600, True, "build_castle"),
+            ("Amethyst Wyrm", "Legendary dragon collectible. Only 500 ever minted.", "Collectible", "Legendary", ["collectible", "dragon", "rare"], [], [], 41000, 4.9, 1500, True, "collectible_dragon"),
+            ("Rustbolt Bot", "Retro-futuristic robot character with coral core lights.", "Character", "Epic", ["robot", "tech", "cute"], [], ["1.21.1"], 52000, 4.6, 1200, False, "skin_robot"),
+            ("Frontier Explorer", "Rugged explorer skin, ready for any biome expedition.", "Skin", "Rare", ["explorer", "adventure", "skin"], [], ["1.21.4"], 74000, 4.7, 1800, False, "skin_explorer"),
+            ("Lush Isle", "A ready-to-explore floating island survival world.", "World", "Rare", ["survival", "island", "worldgen"], [], ["1.21.4"], 61000, 4.5, 1500, False, "world_island"),
+            ("Ember Fox", "Epic fox collectible glowing in a warm ember palette.", "Collectible", "Epic", ["collectible", "fox", "drop"], [], [], 24000, 4.7, 880, False, "collectible_fox"),
+            ("Piglet #001", "Genesis collectible from the Blockyard drop. Ultra chunky.", "Collectible", "Rare", ["collectible", "cute", "drop"], [], [], 18000, 4.4, 620, False, "collectible_pig"),
         ]
-        descriptions = {
-            "Lithium Performance": "# Lithium\n\nLithium is a **free and open-source** optimization mod that improves the general performance of the game *without* changing any behavior.\n\n## Features\n- Optimized game physics\n- Faster block ticking\n- Reduced memory allocation\n\n## Compatibility\nWorks with Sodium and Phosphor. No config needed.",
+        type_desc = {
+            "Skin": "## Apply this skin\n1. Download the pack\n2. Upload it in your Minecraft profile or launcher\n3. Jump in and show it off\n\nWorks in Java & compatible clients.",
+            "Character": "## Character pack\nIncludes the full skin plus matching capes and accessories where supported.\n\n1. Download\n2. Apply in your launcher\n3. Done",
+            "Build": "## Import this build\nShipped as a schematic + world download.\n\n1. Drop into your saves or use a schematic mod\n2. Paste it into your world\n3. Make it yours",
+            "World": "## Load this world\n1. Download the world folder\n2. Unzip into your `saves` directory\n3. Select it from your worlds list",
+            "Mod": "## Install this mod\n1. Download the latest version\n2. Drop the file into your `mods` folder\n3. Launch with the matching loader\n\nReleased under the MIT license.",
+            "Collectible": "## Blocky collectible\nPart of a limited voxel drop. Includes the render + in-game display model.\n\nOwnership is tracked to your Kivo profile.",
         }
-        for (title, summary, cat, tags, loaders, gvs, dls, rating, rcount, pick, status) in demo:
+        for (title, summary, itype, rarity, tags, loaders, gvs, dls, rating, rcount, pick, img) in demo:
             slug = slugify(title)
             mid = str(uuid.uuid4())
             await db.mods.insert_one({
                 "id": mid, "slug": slug, "title": title, "summary": summary,
-                "description": descriptions.get(title, f"# {title}\n\n{summary}\n\n## Installation\n1. Download the latest version\n2. Drop the file into your `mods` folder\n3. Launch the game\n\n## License\nReleased under the MIT license."),
+                "description": f"# {title}\n\n{summary}\n\n{type_desc.get(itype, '')}",
                 "game_slug": "minecraft", "game_name": "Minecraft",
                 "author_id": creator["id"], "author_name": creator["name"], "author_verified": True,
-                "category": cat, "tags": tags, "mod_loaders": loaders, "game_versions": gvs,
-                "license": "MIT", "gallery": [], "icon": f"https://api.dicebear.com/7.x/shapes/svg?seed={slug}",
-                "status": status, "staff_pick": pick, "downloads": dls, "rating_avg": rating,
+                "item_type": itype, "rarity": rarity, "pricing": "free", "price": 0,
+                "category": itype, "tags": tags, "mod_loaders": loaders, "game_versions": gvs,
+                "license": "MIT", "gallery": [], "icon": imgs[img],
+                "status": "approved", "staff_pick": pick, "downloads": dls, "rating_avg": rating,
                 "rating_count": rcount, "base_rating_sum": round(rating * rcount), "base_rating_count": rcount,
                 "review_reason": "", "created_at": now_iso(), "updated_at": now_iso(),
             })
@@ -853,36 +926,37 @@ async def seed():
                 "id": svid, "mod_id": mid, "mod_slug": slug, "mod_title": title,
                 "version_number": "1.0.0", "changelog": "Initial public release.",
                 "game_versions": gvs, "mod_loaders": loaders, "dependencies": [],
-                "file_name": f"{slug}-1.0.0.jar", "file_path": str(spath), "file_size": 240_000,
-                "compressed_size": spath.stat().st_size, "detected_type": "application/java-archive",
+                "file_name": f"{slug}-1.0.0.zip", "file_path": str(spath), "file_size": 240_000,
+                "compressed_size": spath.stat().st_size, "detected_type": "application/zip",
                 "status": "approved", "review_reason": "", "created_at": now_iso(),
             })
 
-        # one pending mod for the review queue
+        # one pending item for the review queue
         pmid = str(uuid.uuid4())
         pvid = str(uuid.uuid4())
         ppath = UPLOAD_DIR / f"{pvid}.gz"
         with gzip.open(ppath, "wb") as fh:
-            fh.write(b"KIVO placeholder artifact for Quantum Tools 0.9.0\n")
+            fh.write(b"KIVO placeholder artifact for Neon Golem 0.9.0\n")
         await db.mods.insert_one({
-            "id": pmid, "slug": "quantum-tools-beta", "title": "Quantum Tools (Beta)",
-            "summary": "New multi-tool mod submitted for review.",
-            "description": "# Quantum Tools\n\nA brand new tool mod awaiting review.",
+            "id": pmid, "slug": "neon-golem-beta", "title": "Neon Golem (Beta)",
+            "summary": "New character skin submitted for review.",
+            "description": "# Neon Golem\n\nA brand new character skin awaiting review.",
             "game_slug": "minecraft", "game_name": "Minecraft",
-            "author_id": creator["id"], "author_name": "NewbieModder", "author_verified": False,
-            "category": "Utility", "tags": ["tools", "utility"], "mod_loaders": ["Fabric"],
+            "author_id": creator["id"], "author_name": "NewbieBlocks", "author_verified": False,
+            "item_type": "Character", "rarity": "Rare", "pricing": "free", "price": 0,
+            "category": "Character", "tags": ["golem", "skin"], "mod_loaders": [],
             "game_versions": ["1.21.4"], "license": "MIT", "gallery": [],
-            "icon": "https://api.dicebear.com/7.x/shapes/svg?seed=quantum-tools",
+            "icon": "https://api.dicebear.com/7.x/shapes/svg?seed=neon-golem",
             "status": "in_review", "staff_pick": False, "downloads": 0, "rating_avg": 0,
             "rating_count": 0, "base_rating_sum": 0, "base_rating_count": 0,
             "review_reason": "", "created_at": now_iso(), "updated_at": now_iso(),
         })
         await db.versions.insert_one({
-            "id": pvid, "mod_id": pmid, "mod_slug": "quantum-tools-beta", "mod_title": "Quantum Tools (Beta)",
+            "id": pvid, "mod_id": pmid, "mod_slug": "neon-golem-beta", "mod_title": "Neon Golem (Beta)",
             "version_number": "0.9.0", "changelog": "First submission.",
-            "game_versions": ["1.21.4"], "mod_loaders": ["Fabric"], "dependencies": ["fabric-api"],
-            "file_name": "quantum-tools-0.9.0.jar", "file_path": str(ppath), "file_size": 512_000,
-            "compressed_size": ppath.stat().st_size, "detected_type": "application/java-archive",
+            "game_versions": ["1.21.4"], "mod_loaders": [], "dependencies": [],
+            "file_name": "neon-golem-0.9.0.zip", "file_path": str(ppath), "file_size": 512_000,
+            "compressed_size": ppath.stat().st_size, "detected_type": "application/zip",
             "status": "in_review", "review_reason": "", "created_at": now_iso(),
         })
 

@@ -34,17 +34,18 @@ async def main():
     print("users removed:", (await db.users.delete_many({"id": {"$in": uids}})).deleted_count)
     print("qa reports removed:", (await db.reports.delete_many({"reason": {"$regex": "^TEST "}})).deleted_count)
 
-    # recompute rating aggregates for mods whose QA reviews were deleted
-    async for m in db.mods.find({}, {"id": 1}):
+    # recompute rating aggregates (base seeded values + remaining real reviews)
+    async for m in db.mods.find({}, {"id": 1, "base_rating_sum": 1, "base_rating_count": 1}):
         revs = await db.reviews.find({"mod_id": m["id"]}, {"rating": 1}).to_list(2000)
-        if revs:
-            await db.mods.update_one({"id": m["id"]}, {"$set": {
-                "rating_avg": round(sum(x["rating"] for x in revs) / len(revs), 2),
-                "rating_count": len(revs)}})
+        total_sum = m.get("base_rating_sum", 0) + sum(x["rating"] for x in revs)
+        total_count = m.get("base_rating_count", 0) + len(revs)
+        await db.mods.update_one({"id": m["id"]}, {"$set": {
+            "rating_avg": round(total_sum / total_count, 2) if total_count else 0,
+            "rating_count": total_count}})
 
     # restore seeded review-queue / report state
-    await db.mods.update_many({"slug": "quantum-tools-beta"}, {"$set": {"status": "in_review", "review_reason": ""}})
-    await db.versions.update_many({"mod_slug": "quantum-tools-beta"}, {"$set": {"status": "in_review"}})
+    await db.mods.update_many({"slug": "neon-golem-beta"}, {"$set": {"status": "in_review", "review_reason": ""}})
+    await db.versions.update_many({"mod_slug": "neon-golem-beta"}, {"$set": {"status": "in_review"}})
     await db.reports.update_many({"category": {"$in": ["malware", "harassment"]}},
                                  {"$set": {"status": "open", "resolution": ""},
                                   "$unset": {"resolved_by": "", "resolved_at": ""}})

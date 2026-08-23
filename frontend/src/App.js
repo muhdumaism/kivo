@@ -3,8 +3,7 @@ import { Toaster } from "sonner";
 import { AuthProvider, useAuth, isStaff } from "@/context/AuthContext";
 import Home from "@/pages/Home";
 import Browse from "@/pages/Browse";
-import GameHub from "@/pages/GameHub";
-import ModDetail from "@/pages/ModDetail";
+import ProductDetail from "@/pages/ProductDetail";
 import Login from "@/pages/Login";
 import Profile from "@/pages/Profile";
 import CreatorDashboard from "@/pages/CreatorDashboard";
@@ -20,7 +19,7 @@ import Anomaly from "@/pages/admin/Anomaly";
 
 function Gate({ children, staff }) {
   const { user, ready } = useAuth();
-  if (!ready) return <div className="min-h-screen bg-charcoal grid place-items-center"><span className="font-mono text-warm/40 uppercase tracking-widest text-sm animate-pulse">loading kivo...</span></div>;
+  if (!ready) return <div className="min-h-screen bg-ink grid place-items-center"><span className="font-pixel text-lavender2/50 text-xl animate-pulse">loading kivo...</span></div>;
   if (!user) return <Navigate to="/login" replace />;
   if (staff && !isStaff(user)) return <Navigate to="/" replace />;
   return children;
@@ -29,13 +28,14 @@ function Gate({ children, staff }) {
 function App() {
   return (
     <AuthProvider>
-      <Toaster position="bottom-right" theme="dark" toastOptions={{ style: { background: "#2A2E37", border: "1px solid #353A45", color: "#EDEAE2", fontFamily: "IBM Plex Mono", fontSize: "12px", borderRadius: 0 } }} />
+      <Toaster position="bottom-right" theme="dark" toastOptions={{ style: { background: "#191233", border: "1px solid #2E2456", color: "#ECE8FF", fontFamily: "Plus Jakarta Sans", fontSize: "13px", borderRadius: "14px" } }} />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse />} />
-          <Route path="/game/:slug" element={<GameHub />} />
-          <Route path="/mod/:slug" element={<ModDetail />} />
+          <Route path="/item/:slug" element={<ProductDetail />} />
+          <Route path="/mod/:slug" element={<ProductDetail />} />
+          <Route path="/game/:slug" element={<Navigate to="/browse" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/policy" element={<Policy />} />
           <Route path="/profile" element={<Gate><Profile /></Gate>} />

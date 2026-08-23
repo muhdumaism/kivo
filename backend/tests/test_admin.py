@@ -97,7 +97,7 @@ def test_moderate_version_approve(admin_session, new_user_session):
 
 
 def test_staff_pick_toggle(admin_session):
-    mod = requests.get(f"{API}/mods", params={"q": "Sodium"}, timeout=30).json()[0]
+    mod = requests.get(f"{API}/mods", params={"q": "Ember Fox"}, timeout=30).json()[0]
     before = mod["staff_pick"]
     r = admin_session.post(f"{API}/admin/mods/{mod['id']}/staff-pick", timeout=30)
     assert r.status_code == 200

@@ -96,6 +96,11 @@ const IconBtn = ({ children, testid, onClick, title, cls }) => (
 
 function DiffModal({ diff, onClose }) {
   const cur = diff.current, prev = diff.previous;
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   const line = (label, a, b) => {
     const changed = String(a) !== String(b);
     return (
@@ -106,11 +111,11 @@ function DiffModal({ diff, onClose }) {
     );
   };
   return (
-    <div className="fixed inset-0 z-[60] bg-charcoal/85 grid place-items-center p-4" onClick={onClose}>
-      <div className="bg-charcoal border border-slate-light w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-light">
-          <h3 className="font-mono text-sm uppercase tracking-widest text-amber flex items-center gap-2"><GitCompare className="w-4 h-4" />Version Diff · {cur.mod_title}</h3>
-          <button data-testid="close-diff" onClick={onClose} className="text-warm/50 hover:text-rust"><X className="w-5 h-5" /></button>
+    <div className="fixed inset-0 z-[60] bg-ink/85 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <div className="bg-plum border border-plumborder rounded-2xl w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-plumborder">
+          <h3 className="font-mono text-sm uppercase tracking-widest text-coral2 flex items-center gap-2"><GitCompare className="w-4 h-4" />Version Diff · {cur.mod_title}</h3>
+          <button data-testid="close-diff" onClick={onClose} className="text-lavender2/50 hover:text-rose"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-4 font-mono text-xs">
           <div className="grid grid-cols-2 gap-4 mb-3 text-[10px] uppercase tracking-widest">
@@ -142,22 +147,22 @@ function ReasonModal({ info, onClose, onSubmit }) {
     quarantine: ["Pending malware detonation", "Suspicious outbound network calls", "Awaiting T&S escalation"],
   };
   return (
-    <div className="fixed inset-0 z-[60] bg-charcoal/85 grid place-items-center p-4" onClick={onClose}>
-      <div className="bg-slate border border-slate-light w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 border-b border-slate-light">
+    <div className="fixed inset-0 z-[60] bg-ink/85 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <div className="bg-plum border border-plumborder rounded-2xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 border-b border-plumborder">
           <h3 className="font-mono text-sm uppercase tracking-widest text-warm">{info.action.replace("_", " ")} · {info.title}</h3>
         </div>
         <div className="p-4 space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {(templates[info.action] || []).map((t) => (
-              <button key={t} onClick={() => setReason(t)} className="font-mono text-[10px] border border-slate-light text-warm/60 px-2 py-1 hover:border-amber hover:text-amber transition-colors">{t}</button>
+              <button key={t} onClick={() => setReason(t)} className="font-mono text-[10px] rounded-full border border-plumborder text-lavender2/60 px-2.5 py-1 hover:border-coral hover:text-coral2 transition-colors">{t}</button>
             ))}
           </div>
           <textarea data-testid="moderation-reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} placeholder="Reason (sent to creator & logged)"
-            className="w-full bg-charcoal border border-slate-light p-3 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-amber" />
+            className="w-full bg-ink border border-plumborder rounded-xl p-3 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" />
           <div className="flex gap-2">
-            <button data-testid="cancel-reason" onClick={onClose} className="flex-1 border border-slate-light text-warm py-2 font-mono text-xs uppercase">Cancel</button>
-            <button data-testid="confirm-reason" onClick={() => onSubmit(reason)} className="flex-1 bg-rust text-warm py-2 font-mono text-xs uppercase tracking-wide">Confirm</button>
+            <button data-testid="cancel-reason" onClick={onClose} className="flex-1 border border-plumborder text-warm py-2 rounded-full font-mono text-xs uppercase">Cancel</button>
+            <button data-testid="confirm-reason" onClick={() => onSubmit(reason)} className="flex-1 bg-rose text-warm py-2 rounded-full font-mono text-xs uppercase tracking-wide">Confirm</button>
           </div>
         </div>
       </div>

@@ -2,34 +2,32 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "@/lib/api";
 import { Navbar } from "@/components/kivo/Navbar";
-import { ModCard } from "@/components/kivo/ModCard";
+import { ItemCard } from "@/components/kivo/ModCard";
+import { Reveal } from "@/components/kivo/Reveal";
 import { Search, SlidersHorizontal } from "lucide-react";
 
-const LOADERS = ["Fabric", "Forge", "NeoForge", "Quilt"];
-const CATEGORIES = ["Technology", "Magic", "Adventure", "Utility", "Worldgen", "Shaders", "Library", "Storage"];
-const VERSIONS = ["1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.2", "1.18.2"];
-const SORTS = [["trending", "Trending"], ["downloads", "Downloads"], ["rating", "Rating"], ["newest", "Newest"], ["updated", "Updated"]];
+const TYPES = ["Skin", "Character", "Build", "World", "Mod", "Collectible"];
+const RARITIES = ["Common", "Rare", "Epic", "Legendary"];
+const SORTS = [["trending", "Trending"], ["downloads", "Most grabbed"], ["rating", "Top rated"], ["newest", "Newest"]];
 
 export default function Browse() {
   const [params, setParams] = useSearchParams();
-  const [mods, setMods] = useState([]);
+  const [items, setItems] = useState([]);
   const [q, setQ] = useState(params.get("q") || "");
   const [loading, setLoading] = useState(true);
 
-  const category = params.get("category") || "";
-  const loader = params.get("loader") || "";
-  const game_version = params.get("game_version") || "";
+  const item_type = params.get("item_type") || "";
+  const rarity = params.get("rarity") || "";
   const sort = params.get("sort") || "trending";
 
   const load = useCallback(() => {
     setLoading(true);
     const p = { sort, limit: 60 };
     if (params.get("q")) p.q = params.get("q");
-    if (category) p.category = category;
-    if (loader) p.loader = loader;
-    if (game_version) p.game_version = game_version;
-    api.get("/mods", { params: p }).then((r) => setMods(r.data)).finally(() => setLoading(false));
-  }, [params, sort, category, loader, game_version]);
+    if (item_type) p.item_type = item_type;
+    if (rarity) p.rarity = rarity;
+    api.get("/mods", { params: p }).then((r) => setItems(r.data)).finally(() => setLoading(false));
+  }, [params, sort, item_type, rarity]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -39,71 +37,57 @@ export default function Browse() {
     setParams(next);
   };
 
-  const submitSearch = (e) => { e.preventDefault(); setParam("q", q); };
-
   return (
-    <div className="min-h-screen bg-charcoal">
+    <div className="min-h-screen bg-ink">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="flex items-center gap-3 mb-8">
-          <SlidersHorizontal className="w-6 h-6 text-teal-light" />
-          <h1 className="font-heading text-3xl lg:text-4xl font-black uppercase tracking-tighter text-warm">Browse Mods</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <SlidersHorizontal className="w-6 h-6 text-lavender2" />
+          <h1 className="font-heading text-3xl lg:text-4xl font-extrabold text-warm">Explore drops</h1>
         </div>
 
-        <form onSubmit={submitSearch} className="relative mb-8 flex gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); setParam("q", q); }} className="flex gap-2 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-warm/40" />
-            <input
-              data-testid="browse-search-input"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search mods, tags, authors..."
-              className="w-full bg-slate border border-slate-light pl-12 pr-4 py-3 text-warm font-mono placeholder:text-warm/30 focus:outline-none focus:ring-2 focus:ring-amber"
-            />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-lavender2/40" />
+            <input data-testid="browse-search-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search skins, builds, creators..."
+              className="w-full bg-plum border border-plumborder rounded-full pl-12 pr-4 py-3 text-warm placeholder:text-lavender2/30 focus:outline-none focus:ring-2 focus:ring-violet" />
           </div>
-          <button type="submit" data-testid="browse-search-btn" className="bg-amber text-charcoal px-6 font-mono text-sm font-bold uppercase tracking-wide hover:-translate-y-0.5 transition-transform">Search</button>
+          <button type="submit" data-testid="browse-search-btn" className="bg-coral text-ink px-6 rounded-full font-bold hover:-translate-y-0.5 transition-transform">Search</button>
         </form>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
-          <aside className="space-y-6">
-            <FilterGroup title="Sort" options={SORTS.map(([v, l]) => [v, l])} active={sort} onSelect={(v) => setParam("sort", v)} />
-            <FilterGroup title="Category" options={CATEGORIES.map((c) => [c, c])} active={category} onSelect={(v) => setParam("category", v)} clearable />
-            <FilterGroup title="Mod Loader" options={LOADERS.map((c) => [c, c])} active={loader} onSelect={(v) => setParam("loader", v)} clearable />
-            <FilterGroup title="Game Version" options={VERSIONS.map((c) => [c, c])} active={game_version} onSelect={(v) => setParam("game_version", v)} clearable mono />
-          </aside>
-
-          <div>
-            <p className="font-mono text-xs text-warm/50 uppercase tracking-widest mb-4">{loading ? "loading..." : `${mods.length} results`}</p>
-            {mods.length === 0 && !loading ? (
-              <div className="border border-dashed border-slate-light p-12 text-center text-warm/40 font-mono">No mods match these filters.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {mods.map((m) => <ModCard key={m.id} mod={m} />)}
-              </div>
-            )}
-          </div>
+        {/* type chips */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Chip label="All" active={!item_type} onClick={() => setParam("item_type", "")} testid="type-all" />
+          {TYPES.map((t) => <Chip key={t} label={`${t}s`} active={item_type === t} onClick={() => setParam("item_type", item_type === t ? "" : t)} testid={`type-${t}`} />)}
         </div>
+
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-lavender2/40 mr-1">Rarity</span>
+          {RARITIES.map((r) => <Chip key={r} small label={r} active={rarity === r} onClick={() => setParam("rarity", rarity === r ? "" : r)} testid={`rarity-${r}`} />)}
+          <span className="flex-1" />
+          <select data-testid="sort-select" value={sort} onChange={(e) => setParam("sort", e.target.value)} className="bg-plum border border-plumborder rounded-full px-4 py-2 text-sm text-warm focus:outline-none focus:ring-2 focus:ring-violet">
+            {SORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+
+        <p className="font-mono text-xs text-lavender2/50 uppercase tracking-widest mb-4">{loading ? "loading..." : `${items.length} drops`}</p>
+        {items.length === 0 && !loading ? (
+          <div className="border border-dashed border-plumborder rounded-2xl p-14 text-center text-lavender2/40 font-mono">No drops match these filters.</div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {items.map((m, i) => <Reveal key={m.id} delay={(i % 4) * 80}><ItemCard item={m} /></Reveal>)}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function FilterGroup({ title, options, active, onSelect, clearable, mono }) {
+function Chip({ label, active, onClick, testid, small }) {
   return (
-    <div>
-      <h4 className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber mb-2">{title}</h4>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map(([v, l]) => (
-          <button
-            key={v}
-            data-testid={`filter-${title.toLowerCase().replace(/\s/g, "-")}-${v}`}
-            onClick={() => onSelect(clearable && active === v ? "" : v)}
-            className={`px-2.5 py-1 text-xs border transition-colors ${mono ? "font-mono" : ""} ${active === v ? "border-amber bg-amber text-charcoal font-semibold" : "border-slate-light text-warm/70 hover:border-teal-light hover:text-warm"}`}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
-    </div>
+    <button data-testid={testid} onClick={onClick}
+      className={`rounded-full border transition-all ${small ? "px-3 py-1 text-xs" : "px-4 py-2 text-sm font-semibold"} ${active ? "bg-coral text-ink border-coral" : "bg-plum text-lavender2/80 border-plumborder hover:border-violet/60"}`}>
+      {label}
+    </button>
   );
 }
