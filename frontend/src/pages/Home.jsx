@@ -6,7 +6,7 @@ import { Navbar } from "@/components/kivo/Navbar";
 import { ParallaxCubes } from "@/components/kivo/ParallaxCubes";
 import { Reveal } from "@/components/kivo/Reveal";
 import { CornerFrame } from "@/components/kivo/CornerFrame";
-import { ArrowRight, ShieldCheck, Boxes, Sparkles, Layers, Globe, Puzzle, Gem, User } from "lucide-react";
+import { ArrowRight, ShieldCheck, Boxes, Sparkles, Layers, Globe, Puzzle, Gem, User, Download, Compass } from "lucide-react";
 
 const TYPES = [
   ["Skin", User], ["Character", Boxes], ["Build", Layers],
@@ -34,64 +34,52 @@ export default function Home() {
       <section className="relative overflow-hidden mesh-bg border-b border-plumborder/60">
         <ParallaxCubes />
         <div className="absolute inset-0 grain" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-24 relative grid lg:grid-cols-2 gap-10 items-center">
-          {/* watermark */}
-          <span className="pointer-events-none select-none absolute -top-4 right-2 font-pixel text-[26vw] leading-none text-stroke hidden lg:block">01</span>
-
-          <div className="relative z-10">
-            <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.25em] text-coral2 bg-coral/10 border border-coral/30 rounded-full px-3 py-1">
-              <Sparkles className="w-3.5 h-3.5" /> Minecraft marketplace
-            </span>
-            <h1 className="font-heading text-5xl lg:text-7xl font-extrabold tracking-tight text-warm mt-5 leading-[0.98]">
-              Blocky drops<br />built <span className="bg-gradient-to-r from-lavender2 to-coral bg-clip-text text-transparent">different.</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-20 relative">
+          <div className="text-center max-w-3xl mx-auto">
+            <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.25em] text-coral2 bg-coral/10 border border-coral/30 rounded-full px-3 py-1">Beta Release</span>
+            <h1 className="font-heading text-4xl lg:text-6xl font-extrabold tracking-tight text-warm mt-5 leading-[1.02]">
+              Download <span className="bg-gradient-to-r from-lavender2 to-coral bg-clip-text text-transparent">Kivo</span><br />for Windows
             </h1>
-            <p className="text-lavender2/80 text-lg mt-6 max-w-md leading-relaxed">
-              Skins, characters, builds, worlds, mods and collectible voxels — hand-made by real creators, human-reviewed before every drop. No sketchy files. Just vibes.
-            </p>
-            <div className="flex flex-wrap gap-3 mt-8">
-              <Link to="/browse" data-testid="hero-browse-btn" className="shine inline-flex items-center gap-2 bg-coral text-ink px-6 py-3.5 rounded-full font-bold hover:-translate-y-1 transition-transform glow-coral">
-                Explore drops <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/browse?item_type=Collectible" data-testid="hero-collect-btn" className="inline-flex items-center gap-2 bg-plum/60 backdrop-blur text-warm px-6 py-3.5 rounded-full font-bold border border-plumborder hover:border-violet/60 transition-colors">
-                <Gem className="w-4 h-4 text-lavender2" /> Collectibles
-              </Link>
+            <p className="text-lavender2/80 text-lg mt-5 max-w-xl mx-auto">The fastest way to discover, install and manage Minecraft mods, plugins and modpacks — all human-reviewed, all in one place.</p>
+            <div className="flex flex-wrap gap-3 justify-center mt-7">
+              <Link to="/browse" data-testid="hero-download-btn" className="shine inline-flex items-center gap-2 bg-coral text-ink px-6 py-3.5 rounded-lg font-bold hover:-translate-y-1 transition-transform glow-coral"><Download className="w-4 h-4" />Download App</Link>
+              <Link to="/browse" data-testid="hero-more-btn" className="inline-flex items-center gap-2 bg-plum/60 backdrop-blur text-warm px-6 py-3.5 rounded-lg font-bold border border-plumborder hover:border-violet/60 transition-colors">More Download Options</Link>
             </div>
           </div>
 
-          {/* hero voxel */}
-          <div className="relative z-10 flex justify-center">
-            {hero && (
-              <Link to={`/item/${hero.slug}`} className="group relative">
-                <div className="absolute inset-0 blur-3xl bg-violet/30 rounded-full scale-90" />
-                <CornerFrame color="coral" className="relative">
-                  <div className="animate-floaty rounded-3xl overflow-hidden border border-lavender/20 bg-gradient-to-br from-plum2 to-ink w-[280px] h-[280px] sm:w-[360px] sm:h-[360px]">
-                    <img src={hero.icon} alt={hero.title} className="w-full h-full object-cover" />
-                  </div>
-                </CornerFrame>
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-ink/80 backdrop-blur border border-plumborder rounded-full px-4 py-1.5 flex items-center gap-2 whitespace-nowrap">
-                  <span className="font-heading font-bold text-sm text-warm">{hero.title}</span>
-                  <span className="font-mono text-[10px] text-mint uppercase">Free</span>
-                </div>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* stats */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-10 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            [fmt(game?.mod_count || 10), "Live drops"],
-            ["6", "Categories"],
-            [fmt(trending.reduce((a, m) => a + (m.downloads || 0), 0)), "Downloads"],
-            ["100%", "Human-reviewed"],
-          ].map(([v, l], i) => (
-            <Reveal key={l} delay={i * 80}>
-              <div className="bg-plum/50 backdrop-blur border border-plumborder rounded-2xl p-4 text-center">
-                <p className="font-heading text-2xl lg:text-3xl font-extrabold bg-gradient-to-r from-lavender2 to-coral bg-clip-text text-transparent">{v}</p>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-lavender2/50 mt-1">{l}</p>
+          {/* Mock desktop app preview */}
+          <Reveal delay={100} className="mt-14 max-w-4xl mx-auto">
+            <div className="rounded-2xl border border-plumborder bg-plum/80 backdrop-blur shadow-2xl overflow-hidden">
+              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-plumborder/60">
+                <span className="w-3 h-3 rounded-full bg-rose/70" /><span className="w-3 h-3 rounded-full bg-gold/70" /><span className="w-3 h-3 rounded-full bg-mint/70" />
+                <span className="ml-3 font-pixel text-sm text-lavender2/70">kivo app</span>
               </div>
-            </Reveal>
-          ))}
+              <div className="flex">
+                <div className="w-14 bg-ink/60 border-r border-plumborder/60 py-4 flex flex-col items-center gap-4">
+                  {[Compass, Boxes, Globe, Puzzle, Gem].map((I, i) => <div key={i} className={`w-9 h-9 grid place-items-center rounded-lg ${i === 0 ? "bg-coral/20 text-coral2" : "text-lavender2/50"}`}><I className="w-4 h-4" /></div>)}
+                </div>
+                <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="md:col-span-2 bg-gradient-to-br from-violet/25 to-plum2 border border-plumborder rounded-xl p-4">
+                    <p className="text-xs font-mono text-lavender2/50 uppercase tracking-widest">Welcome back</p>
+                    <p className="font-heading font-bold text-warm text-lg mt-1">Ready to play, AuroraBlocks?</p>
+                    <div className="mt-3 flex gap-2"><span className="bg-coral text-ink text-xs font-bold px-3 py-1.5 rounded-lg">Play</span><span className="border border-plumborder text-lavender2/70 text-xs px-3 py-1.5 rounded-lg">Manage mods</span></div>
+                  </div>
+                  <div className="bg-ink/60 border border-plumborder rounded-xl p-3">
+                    <p className="text-xs font-mono text-lavender2/50 uppercase tracking-widest mb-2">Playing as</p>
+                    <div className="flex items-center gap-2"><img src="https://api.dicebear.com/7.x/bottts/svg?seed=auroradev" className="w-8 h-8 rounded-lg bg-plum2" alt="" /><span className="text-sm text-warm font-semibold">AuroraBlocks</span></div>
+                    <p className="text-xs font-mono text-lavender2/50 uppercase tracking-widest mt-3 mb-2">Friends</p>
+                    {["BlockFan", "Dex", "Ivy"].map((n) => <div key={n} className="flex items-center gap-2 mb-1.5"><span className="w-2 h-2 rounded-full bg-mint" /><span className="text-xs text-lavender2/70">{n}</span></div>)}
+                  </div>
+                  <div className="md:col-span-3 bg-ink/60 border border-plumborder rounded-xl p-3">
+                    <p className="text-xs font-mono text-lavender2/50 uppercase tracking-widest mb-2">Jump back in</p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {trending.slice(0, 4).map((m) => <div key={m.id} className="flex items-center gap-2 bg-plum2/60 rounded-lg p-2"><img src={m.icon} className="w-8 h-8 rounded-md object-cover" alt="" /><span className="text-xs text-warm truncate">{m.title}</span></div>)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 

@@ -17,7 +17,7 @@ from typing import List, Optional, Literal
 import jwt
 import bcrypt
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
@@ -318,7 +318,7 @@ async def list_mods(
     staff_pick: Optional[bool] = None,
     limit: int = 50,
 ):
-    query = {"status": "approved"}
+    query = {"status": "approved", "visibility": {"$nin": ["private", "unlisted"]}}
     if game:
         query["game_slug"] = game
     if category:
@@ -357,7 +357,7 @@ async def get_mod(slug: str, request: Request):
     mod = await db.mods.find_one({"slug": slug}, {"_id": 0})
     if not mod:
         raise HTTPException(status_code=404, detail="Mod not found")
-    if mod["status"] != "approved":
+    if mod["status"] != "approved" or mod.get("visibility") == "private":
         viewer = await get_optional_user(request)
         allowed = viewer and (viewer["id"] == mod["author_id"] or viewer.get("role") in STAFF_ROLES)
         if not allowed:
@@ -433,10 +433,11 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
     rarity = payload.get("rarity") or "Common"
     if rarity not in valid_rarities:
         raise HTTPException(status_code=400, detail=f"Invalid rarity. Choose one of: {', '.join(valid_rarities)}")
+    requested_slug = (payload.get("slug") or "").strip()
+    slug = slugify(requested_slug) if requested_slug else slugify(title)
     game = await db.games.find_one({"slug": payload.get("game_slug", "minecraft")})
     if not game:
         raise HTTPException(status_code=400, detail="Invalid game")
-    slug = slugify(title)
     if await db.mods.find_one({"slug": slug}):
         slug = f"{slug}-{uuid.uuid4().hex[:5]}"
     trusted = user.get("trust_tier") == "verified" or user.get("verified_creator")
@@ -456,6 +457,11 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
         "rarity": rarity,
         "pricing": "free",
         "price": 0,
+        "visibility": payload.get("visibility", "public") if payload.get("visibility") in ("public", "unlisted", "private") else "public",
+        "monetization": False,
+        "org_id": payload.get("org_id") or None,
+        "follows": 0,
+        "favorites_count": 0,
         "category": payload.get("category", "Utility"),
         "tags": payload.get("tags", [])[:8],
         "mod_loaders": payload.get("mod_loaders", []),
@@ -535,7 +541,14 @@ async def upload_version(
     }
     await db.versions.insert_one(dict(version))
     mod_status = "approved" if (trusted and mod["status"] == "approved") else ("in_review" if not trusted else mod["status"])
-    await db.mods.update_one({"id": mod_id}, {"$set": {"updated_at": now_iso(), "status": mod_status}})
+    mod_update = {"updated_at": now_iso(), "status": mod_status}
+    merged_gv = sorted(set((mod.get("game_versions") or []) + version["game_versions"]))
+    merged_ml = sorted(set((mod.get("mod_loaders") or []) + version["mod_loaders"]))
+    if merged_gv:
+        mod_update["game_versions"] = merged_gv
+    if merged_ml:
+        mod_update["mod_loaders"] = merged_ml
+    await db.mods.update_one({"id": mod_id}, {"$set": mod_update})
     await audit(user, "upload_version", "version", vid, after={"version": version_number, "status": status})
     return {k: v for k, v in version.items() if k != "_id"}
 
@@ -671,6 +684,7 @@ async def moderate_mod(mod_id: str, data: ModerationInput, user: dict = Depends(
     new_status = status_map[data.action]
     await db.mods.update_one({"id": mod_id}, {"$set": {"status": new_status, "review_reason": data.reason, "updated_at": now_iso()}})
     await audit(user, f"mod_{data.action}", "mod", mod_id, before={"status": mod["status"]}, after={"status": new_status, "reason": data.reason})
+    await notify(mod["author_id"], f"mod_{data.action}", f"Your project \"{mod['title']}\" was {new_status.replace('_', ' ')}." + (f" Reason: {data.reason}" if data.reason else ""), f"/item/{mod['slug']}")
     return {"status": new_status}
 
 
@@ -787,6 +801,201 @@ async def anomalies(user: dict = Depends(require_staff())):
     clusters = [{"day": k, "accounts": v, "flag": "mass_signup"} for k, v in by_day.items() if v >= 5]
     return {"download_spikes": spikes, "signup_clusters": clusters,
             "vote_manipulation": [s for s in spikes if s["ratio"] > 5000]}
+
+
+# ---------------------------------------------------------------------------
+# Interactions: follow / favorite / bookmark
+# ---------------------------------------------------------------------------
+async def _toggle(field: str, count_field: Optional[str], slug: str, user: dict):
+    mod = await db.mods.find_one({"slug": slug})
+    if not mod:
+        raise HTTPException(status_code=404, detail="Project not found")
+    arr = list(user.get(field, []) or [])
+    if mod["id"] in arr:
+        arr.remove(mod["id"]); active = False; inc = -1
+    else:
+        arr.append(mod["id"]); active = True; inc = 1
+    await db.users.update_one({"id": user["id"]}, {"$set": {field: arr}})
+    count = None
+    if count_field:
+        await db.mods.update_one({"id": mod["id"]}, {"$inc": {count_field: inc}})
+        count = max(0, (mod.get(count_field, 0) or 0) + inc)
+    return {"active": active, "count": count}
+
+
+@api.post("/mods/{slug}/follow")
+async def follow(slug: str, user: dict = Depends(get_current_user)):
+    return await _toggle("following", "follows", slug, user)
+
+
+@api.post("/mods/{slug}/favorite")
+async def favorite(slug: str, user: dict = Depends(get_current_user)):
+    return await _toggle("favorites", "favorites_count", slug, user)
+
+
+@api.post("/mods/{slug}/bookmark")
+async def bookmark(slug: str, user: dict = Depends(get_current_user)):
+    return await _toggle("bookmarks", None, slug, user)
+
+
+@api.get("/me/library")
+async def my_library(user: dict = Depends(get_current_user)):
+    fresh = await db.users.find_one({"id": user["id"]})
+    ids = {"following": fresh.get("following", []) or [], "favorites": fresh.get("favorites", []) or [], "bookmarks": fresh.get("bookmarks", []) or []}
+    all_ids = list(set(ids["following"] + ids["favorites"] + ids["bookmarks"]))
+    mods = await db.mods.find({"id": {"$in": all_ids}}, {"_id": 0}).to_list(500)
+    return {"ids": ids, "mods": mods}
+
+
+# ---------------------------------------------------------------------------
+# Project edit + gallery
+# ---------------------------------------------------------------------------
+@api.put("/creator/mods/{mod_id}")
+async def edit_mod(mod_id: str, payload: dict, user: dict = Depends(get_current_user)):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if mod["author_id"] != user["id"] and user.get("role") not in STAFF_ROLES:
+        raise HTTPException(status_code=403, detail="Not your project")
+    allowed = {}
+    for k in ("summary", "description", "license", "icon", "item_type", "rarity"):
+        if k in payload:
+            allowed[k] = payload[k]
+    if "name" in payload and payload["name"].strip():
+        allowed["title"] = payload["name"].strip()
+    if payload.get("visibility") in ("public", "unlisted", "private"):
+        allowed["visibility"] = payload["visibility"]
+    if "monetization" in payload:
+        allowed["monetization"] = bool(payload["monetization"])
+    if "tags" in payload:
+        allowed["tags"] = payload["tags"][:8]
+    if "mod_loaders" in payload:
+        allowed["mod_loaders"] = payload["mod_loaders"]
+    if "game_versions" in payload:
+        allowed["game_versions"] = payload["game_versions"]
+    allowed["updated_at"] = now_iso()
+    await db.mods.update_one({"id": mod_id}, {"$set": allowed})
+    fresh = await db.mods.find_one({"id": mod_id}, {"_id": 0})
+    return fresh
+
+
+@api.post("/creator/mods/{mod_id}/gallery")
+async def upload_gallery(mod_id: str, file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod or (mod["author_id"] != user["id"] and user.get("role") not in STAFF_ROLES):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    raw = await file.read()
+    if len(raw) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Image exceeds 10MB")
+    gdir = UPLOAD_DIR / "gallery"
+    gdir.mkdir(exist_ok=True)
+    ext = os.path.splitext(file.filename)[1].lower() or ".png"
+    fname = f"{uuid.uuid4().hex}{ext}"
+    (gdir / fname).write_bytes(raw)
+    url = f"/api/gallery/{fname}"
+    gallery = list(mod.get("gallery", []) or [])
+    gallery.append(url)
+    await db.mods.update_one({"id": mod_id}, {"$set": {"gallery": gallery, "updated_at": now_iso()}})
+    return {"url": url, "gallery": gallery}
+
+
+@api.get("/gallery/{fname}")
+async def serve_gallery(fname: str):
+    path = UPLOAD_DIR / "gallery" / fname
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(str(path))
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+async def notify(user_id: str, ntype: str, text: str, link: str = ""):
+    await db.notifications.insert_one({
+        "id": str(uuid.uuid4()), "user_id": user_id, "type": ntype,
+        "text": text, "link": link, "read": False, "created_at": now_iso(),
+    })
+
+
+@api.get("/notifications")
+async def get_notifications(user: dict = Depends(get_current_user)):
+    items = await db.notifications.find({"user_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    unread = len([n for n in items if not n.get("read")])
+    return {"notifications": items, "unread": unread}
+
+
+@api.post("/notifications/read-all")
+async def read_all(user: dict = Depends(get_current_user)):
+    await db.notifications.update_many({"user_id": user["id"]}, {"$set": {"read": True}})
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# Collections
+# ---------------------------------------------------------------------------
+@api.post("/collections")
+async def create_collection(payload: dict, user: dict = Depends(get_current_user)):
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    col = {"id": str(uuid.uuid4()), "owner_id": user["id"], "owner_name": user["name"],
+           "name": name, "description": payload.get("description", ""), "mod_ids": [], "created_at": now_iso()}
+    await db.collections.insert_one(dict(col))
+    return {k: v for k, v in col.items() if k != "_id"}
+
+
+@api.get("/collections")
+async def list_collections(user: dict = Depends(get_current_user)):
+    cols = await db.collections.find({"owner_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    for c in cols:
+        c["count"] = len(c.get("mod_ids", []))
+    return cols
+
+
+@api.get("/collections/{cid}")
+async def get_collection(cid: str, user: dict = Depends(get_current_user)):
+    col = await db.collections.find_one({"id": cid, "owner_id": user["id"]}, {"_id": 0})
+    if not col:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    col["mods"] = await db.mods.find({"id": {"$in": col.get("mod_ids", [])}}, {"_id": 0}).to_list(500)
+    return col
+
+
+@api.post("/collections/{cid}/items")
+async def toggle_collection_item(cid: str, payload: dict, user: dict = Depends(get_current_user)):
+    col = await db.collections.find_one({"id": cid, "owner_id": user["id"]})
+    if not col:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    mod_id = payload.get("mod_id")
+    if not mod_id or not await db.mods.find_one({"id": mod_id}):
+        raise HTTPException(status_code=404, detail="Project not found")
+    ids = list(col.get("mod_ids", []))
+    if mod_id in ids:
+        ids.remove(mod_id); active = False
+    else:
+        ids.append(mod_id); active = True
+    await db.collections.update_one({"id": cid}, {"$set": {"mod_ids": ids}})
+    return {"active": active, "count": len(ids)}
+
+
+# ---------------------------------------------------------------------------
+# Organizations (basic)
+# ---------------------------------------------------------------------------
+@api.post("/organizations")
+async def create_org(payload: dict, user: dict = Depends(get_current_user)):
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    org = {"id": str(uuid.uuid4()), "slug": slugify(name), "name": name, "owner_id": user["id"],
+           "members": [{"user_id": user["id"], "name": user["name"], "role": "owner"}], "created_at": now_iso()}
+    await db.organizations.insert_one(dict(org))
+    return {k: v for k, v in org.items() if k != "_id"}
+
+
+@api.get("/organizations")
+async def list_orgs(user: dict = Depends(get_current_user)):
+    orgs = await db.organizations.find({"members.user_id": user["id"]}, {"_id": 0}).to_list(100)
+    return orgs
 
 
 # ---------------------------------------------------------------------------
@@ -942,7 +1151,7 @@ async def seed():
             "summary": "New character skin submitted for review.",
             "description": "# Neon Golem\n\nA brand new character skin awaiting review.",
             "game_slug": "minecraft", "game_name": "Minecraft",
-            "author_id": creator["id"], "author_name": "NewbieBlocks", "author_verified": False,
+            "author_id": creator["id"], "author_name": creator["name"], "author_verified": False,
             "item_type": "Character", "rarity": "Rare", "pricing": "free", "price": 0,
             "category": "Character", "tags": ["golem", "skin"], "mod_loaders": [],
             "game_versions": ["1.21.4"], "license": "MIT", "gallery": [],

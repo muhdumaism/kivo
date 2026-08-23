@@ -8,6 +8,8 @@ import Login from "@/pages/Login";
 import Profile from "@/pages/Profile";
 import CreatorDashboard from "@/pages/CreatorDashboard";
 import NewMod from "@/pages/NewMod";
+import ProjectEdit from "@/pages/ProjectEdit";
+import Collections from "@/pages/Collections";
 import Policy from "@/pages/Policy";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
@@ -39,6 +41,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/policy" element={<Policy />} />
           <Route path="/profile" element={<Gate><Profile /></Gate>} />
+          <Route path="/collections" element={<Gate><Collections /></Gate>} />
+          <Route path="/project/:slug/edit" element={<Gate><ProjectEdit /></Gate>} />
           <Route path="/creator" element={<Gate><CreatorDashboard /></Gate>} />
           <Route path="/creator/new" element={<Gate><NewMod /></Gate>} />
           <Route path="/admin" element={<Gate staff><AdminLayout /></Gate>}>
