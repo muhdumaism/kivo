@@ -5,7 +5,6 @@ import { Navbar } from "@/components/qiveo/Navbar";
 import { ItemCard } from "@/components/qiveo/ModCard";
 import { toast } from "sonner";
 import { FolderHeart, Plus, X } from "lucide-react";
-import { Footer } from "@/pages/Home";
 
 export default function Collections() {
   const [params, setParams] = useSearchParams();
@@ -25,9 +24,9 @@ export default function Collections() {
   const open = (c) => api.get(`/collections/${c.id}`).then((r) => setActive(r.data)).catch(() => {});
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent">
+    <div className="min-h-screen bg-transparent">
       <Navbar />
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-heading text-3xl font-extrabold text-warm flex items-center gap-2"><FolderHeart className="w-7 h-7 text-coral" />Collections</h1>
           <button data-testid="new-collection-btn" onClick={() => setCreating(true)} className="bg-coral text-ink px-4 py-2.5 rounded-lg font-bold flex items-center gap-1.5 hover:-translate-y-0.5 transition-transform"><Plus className="w-4 h-4" />New collection</button>
@@ -61,7 +60,6 @@ export default function Collections() {
           </div>
         )}
       </div>
-      <Footer />
     </div>
   );
 }

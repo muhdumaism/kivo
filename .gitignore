@@ -86,9 +86,3 @@ android-sdk/
 credentials.json
 *.key
 .credentials
-
-# MariaDB local database data and temporary extraction
-backend/mariadb/extracted/
-backend/mariadb/data/
-*.db
-*.sqlite

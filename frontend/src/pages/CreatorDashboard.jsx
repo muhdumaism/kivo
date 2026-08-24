@@ -8,7 +8,6 @@ import { fmt } from "@/components/qiveo/ModCard";
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Upload, Download, Star, Package, Clock, Plus } from "lucide-react";
 import UploadVersionModal from "@/components/qiveo/UploadVersionModal";
-import { Footer } from "@/pages/Home";
 
 export default function CreatorDashboard() {
   const { user } = useAuth();
@@ -23,9 +22,9 @@ export default function CreatorDashboard() {
   useEffect(load, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent">
+    <div className="min-h-screen bg-transparent">
       <Navbar />
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center justify-between mb-8">
           <div>
             <span className="font-mono text-xs uppercase tracking-[0.2em] text-lavender2/60">Creator Studio</span>
@@ -72,15 +71,15 @@ export default function CreatorDashboard() {
               </div>
               {m.review_reason && m.status !== "approved" && <p className="font-mono text-xs text-mustard max-w-xs">"{m.review_reason}"</p>}
               <StatusBadge status={m.status} testid={`creator-status-${m.slug}`} />
-              <button data-testid={`upload-version-${m.slug}`} onClick={() => setUploadFor(m)} className="flex items-center gap-1.5 bg-[#E9D5FF] text-[#0A0A0C] px-4 py-2 rounded-full text-xs font-extrabold hover:-translate-y-0.5 transition-transform shadow-[2px_2px_0px_0px_rgba(20,20,20,1)]">
+              <button data-testid={`upload-version-${m.slug}`} onClick={() => setUploadFor(m)} className="flex items-center gap-1.5 bg-teal text-warm px-4 py-2 rounded-full text-xs font-semibold hover:-translate-y-0.5 transition-transform">
                 <Upload className="w-3.5 h-3.5" />Upload file
               </button>
             </div>
           ))}
         </div>
       </div>
+
       {uploadFor && <UploadVersionModal mod={uploadFor} onClose={() => setUploadFor(null)} onDone={() => { setUploadFor(null); load(); }} />}
-      <Footer />
     </div>
   );
 }

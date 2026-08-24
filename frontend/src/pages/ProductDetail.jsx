@@ -80,7 +80,7 @@ export default function ProductDetail() {
     };
   }, [slug, item, addListener]);
 
-  if (item === false) return <div className="min-h-screen flex flex-col bg-transparent"><Navbar /><div className="flex-1 p-10"><p className="text-[#E9D5FF] font-mono font-bold">Project not found.</p></div><Footer /></div>;
+  if (item === false) return <div className="min-h-screen bg-transparent"><Navbar /><p className="text-[#E9D5FF] p-10 font-mono font-bold">Project not found.</p><Footer /></div>;
   if (!item) return <div className="min-h-screen bg-transparent"><Navbar /></div>;
 
   const owner = user && (user.id === item.author_id || isStaff(user));
@@ -108,19 +108,15 @@ export default function ProductDetail() {
 
   const grab = () => {
     if (!latest) return toast.error("No file available yet");
-    const token = localStorage.getItem("qiveo_token");
-    const url = token 
-      ? `${API}/download/${latest.id}?token=${encodeURIComponent(token)}`
-      : `${API}/download/${latest.id}`;
-    window.open(url, "_blank");
+    window.open(`${API}/download/${latest.id}`, "_blank");
     toast.success(`Downloading ${item.title}`);
     setTimeout(reload, 1200);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent">
+    <div className="min-h-screen bg-transparent">
       <Navbar />
-      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         
         {/* Header Retro Card */}
         <div className="bg-[#0A0A0C] border-2 border-[#E9D5FF] rounded-3xl p-6 flex flex-col md:flex-row gap-5 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]">

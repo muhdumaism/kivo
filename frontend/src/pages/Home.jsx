@@ -58,10 +58,10 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent">
+    <div className="min-h-screen bg-transparent">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         
         {/* Title row */}
         <Reveal>
@@ -115,6 +115,9 @@ export default function Home() {
               <GameCard item={item} />
             </Reveal>
           ))}
+          <Reveal delay={filteredTrending.length * 60}>
+            <PitchUsCard />
+          </Reveal>
         </div>
       </main>
 
@@ -148,7 +151,30 @@ function GameCard({ item }) {
   );
 }
 
-
+function PitchUsCard() {
+  return (
+    <div className="group block text-[#E9D5FF] cursor-pointer" onClick={() => toast("Contact us at pitch@qiveo.dev!")}>
+      <div className="relative">
+        <div className="border-2 border-[#E9D5FF] rounded-3xl overflow-hidden bg-[#15141E] aspect-square flex flex-col items-center justify-center p-6 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
+          <div className="w-16 h-16 border-2 border-dashed border-[#E9D5FF]/40 rounded-full flex items-center justify-center text-3xl font-extrabold">+</div>
+        </div>
+        
+        <div className="mt-3.5 flex items-start justify-between gap-2">
+          <div>
+            <h3 className="font-heading font-extrabold text-lg leading-tight group-hover:underline">Your game here!</h3>
+            <span className="font-mono text-[10px] text-[#E9D5FF]/65 font-extrabold uppercase tracking-wider block mt-1">
+              BY YOUR STUDIO
+            </span>
+          </div>
+          
+          <span className="bg-[#E9D5FF] text-[#0A0A0C] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#E9D5FF]">
+            PITCH US
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Footer() {
   const [email, setEmail] = useState("");
@@ -180,7 +206,7 @@ export function Footer() {
           <div>
             <h4 className="font-heading font-extrabold text-sm uppercase tracking-wider text-[#E9D5FF] mb-4">Contact</h4>
             <div className="flex flex-col gap-2.5 text-sm text-[#E9D5FF]/70 font-semibold">
-              <Link to="/contact" className="hover:text-[#8B5CF6]">Contact</Link>
+              <Link to="/pitch" className="hover:text-[#8B5CF6]">Pitch Us</Link>
               <Link to="/policy" className="hover:text-[#8B5CF6]">Trust Policy</Link>
               <Link to="/policy" className="hover:text-[#8B5CF6]">DMCA Info</Link>
               <Link to="/policy" className="hover:text-[#8B5CF6]">Privacy Policy</Link>

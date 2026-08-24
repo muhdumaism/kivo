@@ -15,6 +15,7 @@ import Collections from "@/pages/Collections";
 import Policy from "@/pages/Policy";
 import News from "@/pages/News";
 import About from "@/pages/About";
+import Pitch from "@/pages/Pitch";
 import Contact from "@/pages/Contact";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
@@ -51,6 +52,7 @@ function App() {
             <Route path="/policy" element={<Policy />} />
             <Route path="/news" element={<News />} />
             <Route path="/about" element={<About />} />
+            <Route path="/pitch" element={<Pitch />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Gate><Profile /></Gate>} />
             <Route path="/collections" element={<Gate><Collections /></Gate>} />

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api, { apiError } from "@/lib/api";
 import { toast } from "sonner";
 import { fmt } from "@/components/qiveo/ModCard";
-import { Check, X, AlertTriangle, ShieldAlert, GitCompare, FileArchive, ExternalLink } from "lucide-react";
+import { Check, X, AlertTriangle, ShieldAlert, GitCompare, FileArchive } from "lucide-react";
 
 export default function ReviewQueue() {
   const [data, setData] = useState({ mods: [], versions: [] });
@@ -60,7 +60,6 @@ export default function ReviewQueue() {
             {data.mods.map((m) => (
               <QueueRow key={m.id} title={m.title} sub={`by ${m.author_name} · ${m.category}`} tag={m.game_name}
                 testid={`queue-mod-${m.slug}`}
-                projectUrl={`/item/${m.slug}`}
                 onApprove={() => moderate("mods", m.id, "approve")}
                 onReject={() => setReasonFor({ type: "mods", id: m.id, action: "reject", title: m.title })}
                 onChanges={() => setReasonFor({ type: "mods", id: m.id, action: "request_changes", title: m.title })}
@@ -77,7 +76,6 @@ export default function ReviewQueue() {
             {data.versions.map((v) => (
               <QueueRow key={v.id} title={`${v.mod_title} · v${v.version_number}`} sub={`${v.file_name} · ${fmt(v.file_size)}B · ${v.detected_type}`} tag={v.mod_loaders.join(",")}
                 testid={`queue-version-${v.id}`}
-                projectUrl={`/item/${v.mod_slug}`}
                 onDiff={() => openDiff(v)}
                 onApprove={() => moderate("versions", v.id, "approve")}
                 onReject={() => setReasonFor({ type: "versions", id: v.id, action: "reject", title: v.mod_title })}
@@ -94,24 +92,12 @@ export default function ReviewQueue() {
   );
 }
 
-function QueueRow({ title, sub, tag, testid, projectUrl, onApprove, onReject, onChanges, onQuarantine, onDiff }) {
+function QueueRow({ title, sub, tag, testid, onApprove, onReject, onChanges, onQuarantine, onDiff }) {
   return (
     <div data-testid={testid} className="flex items-center gap-4 p-3 hover:bg-slate/50 flex-wrap">
       <FileArchive className="w-5 h-5 text-warm/30 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-sm text-warm truncate flex items-center gap-3">
-          {title}
-          {projectUrl && (
-            <a 
-              href={projectUrl} 
-              target="_blank" 
-              rel="noreferrer" 
-              className="text-[#8B5CF6] hover:underline font-bold text-xs inline-flex items-center gap-1"
-            >
-              View Project <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
-        </p>
+        <p className="font-mono text-sm text-warm truncate">{title}</p>
         <p className="font-mono text-[11px] text-warm/40 truncate">{sub}</p>
       </div>
       {tag && <span className="font-mono text-[10px] uppercase border border-slate-light text-warm/50 px-1.5 py-0.5">{tag}</span>}

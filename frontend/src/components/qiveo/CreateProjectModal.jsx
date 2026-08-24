@@ -45,8 +45,8 @@ export function CreateProjectModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-[70] bg-ink/80 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
-      <div className="bg-[#15141E] border-2 border-[#E9D5FF] rounded-3xl w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(20,20,20,1)] text-[#E9D5FF]" onClick={(e) => e.stopPropagation()} data-testid="create-project-modal">
-        <div className="flex items-center justify-between p-5 border-b-2 border-[#E9D5FF]">
+      <div className="bg-plum border border-plumborder rounded-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()} data-testid="create-project-modal">
+        <div className="flex items-center justify-between p-5 border-b border-plumborder">
           <h3 className="font-heading font-bold text-warm text-lg">Create a project</h3>
           <button data-testid="create-close" onClick={onClose} className="text-lavender2/50 hover:text-rose"><X className="w-5 h-5" /></button>
         </div>

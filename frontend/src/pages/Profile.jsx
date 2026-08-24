@@ -5,7 +5,6 @@ import { Navbar } from "@/components/qiveo/Navbar";
 import { TrustBadge } from "@/components/qiveo/Badges";
 import { toast } from "sonner";
 import { ShieldCheck, KeyRound, LogOut, Save } from "lucide-react";
-import { Footer } from "@/pages/Home";
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
@@ -24,9 +23,9 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent">
+    <div className="min-h-screen bg-transparent">
       <Navbar />
-      <div className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-10 w-full">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-4 mb-8">
           <img src={user.avatar_url} alt={user.name} referrerPolicy="no-referrer" className="w-20 h-20 border border-slate-light bg-slate" />
           <div>
@@ -79,7 +78,6 @@ export default function Profile() {
           <LogOut className="w-4 h-4" />Sign out of all sessions
         </button>
       </div>
-      <Footer />
     </div>
   );
 }
