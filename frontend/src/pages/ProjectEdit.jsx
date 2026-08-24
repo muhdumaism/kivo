@@ -240,13 +240,56 @@ function LicenseSec({ item, save }) {
   );
 }
 
+const GAMES = {
+  minecraft: ["Plugins", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"],
+  roblox: ["Game setups", "Maps", "Scripts", "Vehicles", "Weapons", "Models", "Clothing", "Graphics & UI", "Animations & VFX", "Audio"],
+  hytale: ["Plugins", "Data assets", "Server setups", "Builds", "Graphics", "Textures", "Models", "Audio", "Other"],
+  discord: ["Bots", "Graphics", "Other"]
+};
+
 function TagsSec({ item, save }) {
   const [tags, setTags] = useState((item.tags || []).join(", "));
+  const [game, setGame] = useState(item.game_slug || "minecraft");
+  const [category, setCategory] = useState(item.category || item.item_type || "Plugins");
+
+  const saveTags = () => {
+    save({ 
+      tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+      game_slug: game,
+      category: category,
+      item_type: category // for backwards compatibility
+    });
+  };
+
   return (
-    <div className="max-w-md space-y-4">
-      <h2 className="font-heading font-bold text-warm text-lg">Tags</h2>
-      <Field label="Tags (comma separated)" data-testid="edit-tags" value={tags} onChange={(e) => setTags(e.target.value)} />
-      <button data-testid="edit-tags-save" onClick={() => save({ tags: tags.split(",").map((t) => t.trim()).filter(Boolean) })} className="bg-coral text-ink px-5 py-2.5 rounded-lg font-bold">Save</button>
+    <div className="max-w-md space-y-5 bg-[#24201A] border border-[#92400E] rounded-3xl p-6">
+      <h2 className="font-heading font-black text-[#FFF8E1] text-xl">Classification & Tags</h2>
+      
+      <div>
+        <label className="block font-mono text-[10px] uppercase tracking-widest text-[#FFF8E1]/50 mb-1.5 font-bold">Game / Platform</label>
+        <select value={game} onChange={(e) => { setGame(e.target.value); setCategory(GAMES[e.target.value][0]); }} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
+          <option value="minecraft">Minecraft</option>
+          <option value="roblox">Roblox</option>
+          <option value="hytale">Hytale</option>
+          <option value="discord">Discord</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block font-mono text-[10px] uppercase tracking-widest text-[#FFF8E1]/50 mb-1.5 font-bold">Category</label>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
+          {GAMES[game]?.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </div>
+
+      <div>
+        <label className="block font-mono text-[10px] uppercase tracking-widest text-[#FFF8E1]/50 mb-1.5 font-bold">Tags (comma separated)</label>
+        <input data-testid="edit-tags" value={tags} onChange={(e) => setTags(e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors" />
+      </div>
+
+      <div className="pt-2">
+        <button data-testid="edit-tags-save" onClick={saveTags} className="w-full bg-[#F5C542] text-[#171512] px-5 py-3 rounded-full text-sm font-bold hover:bg-[#FFD84D] transition-colors">Save classification</button>
+      </div>
     </div>
   );
 }
