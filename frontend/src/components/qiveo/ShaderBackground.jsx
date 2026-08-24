@@ -318,12 +318,12 @@ export function ShaderBackground() {
     const uCursorLoc = gl.getUniformLocation(program, "u_cursor");
 
     // Color definitions in Purple and Black Theme:
-    // Colors (low -> high): #050507 (Black), #150A2E (Dark Purple-Black), #7C3AED (Vibrant Purple), #E9D5FF (Lavender)
+    // Colors (low -> high): #050507 (Black), #150A2E (Dark Purple-Black), #7C3AED (Vibrant Purple), #F5C542 (Lavender)
     const colorValues = new Float32Array([
       0.02, 0.02, 0.03, // #050507
       0.08, 0.04, 0.18, // #150A2E
       0.49, 0.23, 0.93, // #7C3AED
-      0.91, 0.84, 1.00, // #E9D5FF
+      0.91, 0.84, 1.00, // #F5C542
       0.00, 0.00, 0.00,
       0.00, 0.00, 0.00,
       0.00, 0.00, 0.00,

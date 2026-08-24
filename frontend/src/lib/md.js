@@ -10,7 +10,7 @@ renderer.link = function(href, title, text) {
   const linkText = typeof href === 'object' ? href.text : text;
   const t = (typeof href === 'object' ? href.title : title) || '';
   
-  return `<a target="_blank" rel="noopener noreferrer" href="${url}" title="${t}" class="text-amber underline hover:text-[#E9D5FF]">${linkText}</a>`;
+  return `<a target="_blank" rel="noopener noreferrer" href="${url}" title="${t}" class="text-amber underline hover:text-[#FFF8E1]">${linkText}</a>`;
 };
 
 renderer.image = function(href, title, text) {
@@ -18,7 +18,7 @@ renderer.image = function(href, title, text) {
   const alt = typeof href === 'object' ? href.text : text;
   const t = (typeof href === 'object' ? href.title : title) || '';
   
-  return `<img src="${url}" alt="${alt}" title="${t}" class="rounded-xl border-2 border-[#E9D5FF] shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] my-4 max-w-full h-auto inline-block" />`;
+  return `<img src="${url}" alt="${alt}" title="${t}" class="rounded-xl border-2 border-[#92400E] shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] my-4 max-w-full h-auto inline-block" />`;
 };
 
 // We don't necessarily need to override everything else, 

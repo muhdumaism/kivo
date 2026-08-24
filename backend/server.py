@@ -2178,20 +2178,21 @@ async def seed():
                     "two_factor_enabled": True, "created_at": now_iso(),
                 })
 
-    # game / hub
-    if not await db.games.find_one({"slug": "minecraft"}):
-        await db.games.insert_one({
-            "id": str(uuid.uuid4()), "slug": "minecraft", "name": "Minecraft",
-            "tagline": "Skins, builds, mods & collectibles — curated for the block universe.",
-            "description": "Qiveo is the Minecraft marketplace. Grab hand-crafted skins, characters, builds, worlds, mods and blocky collectibles — every drop reviewed by real humans before it lands.",
-            "banner": "https://images.pexels.com/photos/17483907/pexels-photo-17483907.png",
-            "icon": "https://api.dicebear.com/7.x/shapes/svg?seed=minecraft",
-            "item_types": ["Skin", "Character", "Build", "World", "Mod", "Collectible"],
-            "rarities": ["Common", "Rare", "Epic", "Legendary"],
-            "categories": ["Skin", "Character", "Build", "World", "Mod", "Collectible"],
-            "mod_loaders": ["Fabric", "Forge", "NeoForge", "Quilt"],
-            "versions": ["1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.2", "1.18.2", "1.16.5"],
-        })
+    # games / hub
+    games_data = [
+        {"slug": "minecraft", "name": "Minecraft", "categories": ["Plugins", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"]},
+        {"slug": "roblox", "name": "Roblox", "categories": ["Game setups", "Maps", "Scripts", "Vehicles", "Weapons", "Models", "Clothing", "Graphics & UI", "Animations & VFX", "Audio"]},
+        {"slug": "hytale", "name": "Hytale", "categories": ["Plugins", "Data assets", "Server setups", "Builds", "Graphics", "Textures", "Models", "Audio", "Other"]},
+        {"slug": "discord", "name": "Discord", "categories": ["Bots", "Graphics", "Other"]}
+    ]
+    for g in games_data:
+        if not await db.games.find_one({"slug": g["slug"]}):
+            await db.games.insert_one({
+                "id": str(uuid.uuid4()), "slug": g["slug"], "name": g["name"],
+                "categories": g["categories"]
+            })
+        else:
+            await db.games.update_one({"slug": g["slug"]}, {"$set": {"categories": g["categories"]}})
 
     if await db.categories.count_documents({}) == 0:
         for c in [

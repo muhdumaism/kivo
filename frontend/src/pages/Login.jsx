@@ -63,25 +63,25 @@ export default function Login() {
     <div className="min-h-screen bg-transparent flex flex-col justify-between relative">
       <ShaderBackground />
       {/* Brand Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b-2 border-[#E9D5FF]">
+      <header className="px-6 py-4 flex items-center justify-between border-b-2 border-[#92400E]">
         <Link to="/" className="flex items-center gap-2">
-          <span className="font-heading font-black text-2xl tracking-tighter text-[#E9D5FF] uppercase">QIVEO</span>
+          <span className="font-heading font-black text-2xl tracking-tighter text-[#FFF8E1] uppercase">QIVEO</span>
         </Link>
-        <p className="font-mono text-xs text-[#E9D5FF]/40 font-bold">// authentication portal</p>
+        <p className="font-mono text-xs text-[#FFF8E1]/40 font-bold">// authentication portal</p>
       </header>
 
       {/* Main Login Box */}
       <div className="flex-1 flex items-center justify-center p-6 my-12">
-        <div className="w-full max-w-md bg-[#0A0A0C] border-2 border-[#E9D5FF] rounded-3xl p-8 shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] text-[#E9D5FF]">
+        <div className="w-full max-w-md bg-[#171512] border-2 border-[#92400E] rounded-3xl p-8 shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] text-[#FFF8E1]">
           <h1 className="font-heading text-3xl font-black uppercase text-center tracking-tight">Connect to Qiveo</h1>
-          <p className="text-[#E9D5FF]/60 text-center mt-2 text-sm font-semibold">Choose a secure provider to authenticate</p>
+          <p className="text-[#FFF8E1]/60 text-center mt-2 text-sm font-semibold">Choose a secure provider to authenticate</p>
 
           <div className="space-y-4 mt-8">
             <button 
               data-testid="google-login-btn" 
               onClick={handleGoogleLogin} 
               disabled={busy}
-              className="w-full flex items-center justify-center gap-3 bg-[#0A0A0C] text-[#E9D5FF] border-2 border-[#E9D5FF] py-3.5 rounded-full font-heading font-extrabold shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] hover:bg-[#E9D5FF]/5 transition-all disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-3 bg-[#171512] text-[#FFF8E1] border-2 border-[#92400E] py-3.5 rounded-full font-heading font-extrabold shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] hover:bg-[#F5C542]/5 transition-all disabled:opacity-60"
             >
               {busy === "google" ? <Loader2 className="w-5 h-5 animate-spin" /> : <GoogleIcon />} 
               Continue with Google
@@ -91,7 +91,7 @@ export default function Login() {
               data-testid="discord-login-btn" 
               onClick={handleDiscordLogin} 
               disabled={busy}
-              className="w-full flex items-center justify-center gap-3 bg-[#5865F2] text-white border-2 border-[#E9D5FF] py-3.5 rounded-full font-heading font-extrabold shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] hover:opacity-95 transition-all disabled:opacity-60"
+              className="w-full flex items-center justify-center gap-3 bg-[#5865F2] text-white border-2 border-[#92400E] py-3.5 rounded-full font-heading font-extrabold shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] hover:opacity-95 transition-all disabled:opacity-60"
             >
               {busy === "discord" ? <Loader2 className="w-5 h-5 animate-spin" /> : <DiscordIcon />} 
               Continue with Discord
@@ -103,7 +103,7 @@ export default function Login() {
 
 
           <p className="text-center mt-8">
-            <Link to="/" className="text-[#E9D5FF]/50 hover:text-[#E9D5FF] text-sm font-semibold">← Back home</Link>
+            <Link to="/" className="text-[#FFF8E1]/50 hover:text-[#FFF8E1] text-sm font-semibold">← Back home</Link>
           </p>
         </div>
       </div>

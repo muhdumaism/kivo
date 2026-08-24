@@ -33,44 +33,44 @@ export default function AdminContact() {
   };
 
   return (
-    <div className="text-[#E9D5FF] space-y-8">
+    <div className="text-[#FFF8E1] space-y-8">
       <div>
         <h1 className="font-heading text-3xl font-black uppercase tracking-tight">Contact Inquiries</h1>
-        <p className="font-mono text-xs text-[#E9D5FF]/40 uppercase tracking-widest mt-1">// manage messages and user reports from contact form</p>
+        <p className="font-mono text-xs text-[#FFF8E1]/40 uppercase tracking-widest mt-1">// manage messages and user reports from contact form</p>
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="w-8 h-8 text-[#8B5CF6] animate-spin" />
-          <span className="font-mono text-xs text-[#E9D5FF]/40">Loading contact submissions...</span>
+          <Loader2 className="w-8 h-8 text-[#92400E] animate-spin" />
+          <span className="font-mono text-xs text-[#FFF8E1]/40">Loading contact submissions...</span>
         </div>
       ) : submissions.length === 0 ? (
-        <div className="text-center py-20 bg-[#15141E] border-2 border-[#E9D5FF] rounded-3xl p-8 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] max-w-xl mx-auto">
-          <AlertCircle className="w-10 h-10 text-[#E9D5FF]/30 mx-auto mb-4" />
-          <p className="font-mono text-sm text-[#E9D5FF]/50 font-bold">No inquiries submitted yet.</p>
+        <div className="text-center py-20 bg-[#24201A] border-2 border-[#92400E] rounded-3xl p-8 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] max-w-xl mx-auto">
+          <AlertCircle className="w-10 h-10 text-[#FFF8E1]/30 mx-auto mb-4" />
+          <p className="font-mono text-sm text-[#FFF8E1]/50 font-bold">No inquiries submitted yet.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {submissions.map((sub) => (
             <div 
               key={sub.id} 
-              className="bg-[#15141E] border-2 border-[#E9D5FF] rounded-3xl p-6 flex flex-col justify-between shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]"
+              className="bg-[#24201A] border-2 border-[#92400E] rounded-3xl p-6 flex flex-col justify-between shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]"
             >
               <div>
-                <div className="flex justify-between items-start gap-4 pb-4 border-b border-[#E9D5FF]/10 mb-4">
+                <div className="flex justify-between items-start gap-4 pb-4 border-b border-[#92400E]/10 mb-4">
                   <div>
-                    <h3 className="font-heading font-extrabold text-base uppercase tracking-tight text-[#E9D5FF]">{sub.subject}</h3>
+                    <h3 className="font-heading font-extrabold text-base uppercase tracking-tight text-[#FFF8E1]">{sub.subject}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="font-mono text-xs font-bold text-[#8B5CF6]">{sub.name}</span>
-                      <span className="text-[#E9D5FF]/30 text-xs">•</span>
-                      <span className="font-mono text-xs text-[#E9D5FF]/50">{sub.email}</span>
+                      <span className="font-mono text-xs font-bold text-[#92400E]">{sub.name}</span>
+                      <span className="text-[#FFF8E1]/30 text-xs">•</span>
+                      <span className="font-mono text-xs text-[#FFF8E1]/50">{sub.email}</span>
                     </div>
                   </div>
                   
                   <div className="flex gap-2 shrink-0">
                     <a 
                       href={`mailto:${sub.email}?subject=RE: ${sub.subject}`}
-                      className="w-8 h-8 rounded-lg border border-[#E9D5FF]/20 text-[#E9D5FF]/60 hover:text-[#8B5CF6] hover:border-[#8B5CF6] grid place-items-center transition-colors"
+                      className="w-8 h-8 rounded-lg border border-[#92400E]/20 text-[#FFF8E1]/60 hover:text-[#92400E] hover:border-[#92400E] grid place-items-center transition-colors"
                       title="Reply by Mail"
                     >
                       <Mail className="w-4 h-4" />
@@ -85,14 +85,14 @@ export default function AdminContact() {
                   </div>
                 </div>
 
-                <div className="text-xs md:text-sm text-[#E9D5FF]/80 leading-relaxed font-semibold font-mono bg-[#0A0A0C]/50 p-4 rounded-xl border border-[#E9D5FF]/5 whitespace-pre-wrap">
+                <div className="text-xs md:text-sm text-[#FFF8E1]/80 leading-relaxed font-semibold font-mono bg-[#171512]/50 p-4 rounded-xl border border-[#92400E]/5 whitespace-pre-wrap">
                   {sub.message}
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[#E9D5FF]/10 flex items-center justify-between text-[10px] font-mono text-[#E9D5FF]/40">
-                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#E9D5FF]/30" /> {new Date(sub.created_at).toLocaleString()}</span>
-                <span className="bg-[#E9D5FF]/5 px-2 py-0.5 rounded uppercase font-bold text-[9px] tracking-wide text-[#E9D5FF]/60">ID: {sub.id.substring(0, 8)}</span>
+              <div className="mt-4 pt-3 border-t border-[#92400E]/10 flex items-center justify-between text-[10px] font-mono text-[#FFF8E1]/40">
+                <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-[#FFF8E1]/30" /> {new Date(sub.created_at).toLocaleString()}</span>
+                <span className="bg-[#F5C542]/5 px-2 py-0.5 rounded uppercase font-bold text-[9px] tracking-wide text-[#FFF8E1]/60">ID: {sub.id.substring(0, 8)}</span>
               </div>
             </div>
           ))}

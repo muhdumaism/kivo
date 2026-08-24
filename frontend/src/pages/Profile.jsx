@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import api, { apiError } from "@/lib/api";
+import api, { API, apiError } from "@/lib/api";
 import { Navbar } from "@/components/qiveo/Navbar";
 import { TrustBadge } from "@/components/qiveo/Badges";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ export default function Profile() {
   const [links, setLinks] = useState((user?.links || []).join(", "));
 
   if (!user) return null;
+  const avatarSrc = user.avatar_url?.startsWith("http") ? user.avatar_url : `${API.replace("/api", "")}${user.avatar_url}`;
 
   const save = async () => {
     try {
@@ -41,7 +42,7 @@ export default function Profile() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-4 mb-8">
           <div className="relative group overflow-hidden border border-slate-light bg-slate w-20 h-20">
-            <img src={user.avatar_url} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:opacity-40 transition-opacity" />
+            <img src={avatarSrc} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:opacity-40 transition-opacity" />
             <label className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer bg-black/40">
               <Upload className="w-6 h-6 text-warm" />
               <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />

@@ -66,8 +66,8 @@ export default function Home() {
         
         {/* Title row */}
         <Reveal>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b-2 border-[#E9D5FF]">
-            <h1 className="font-heading font-black text-4xl sm:text-5xl text-[#E9D5FF] uppercase tracking-tight">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b-2 border-[#92400E]">
+            <h1 className="font-heading font-black text-4xl sm:text-5xl text-[#FFF8E1] uppercase tracking-tight">
               Browse All Games
             </h1>
             
@@ -78,9 +78,9 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="w-full bg-[#15141E] border-2 border-[#E9D5FF] rounded-full pl-4 pr-10 py-2.5 text-sm text-[#E9D5FF] placeholder:text-[#E9D5FF]/50 focus:outline-none focus:shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] transition-all font-semibold"
+                className="w-full bg-[#24201A] border-2 border-[#92400E] rounded-full pl-4 pr-10 py-2.5 text-sm text-[#FFF8E1] placeholder:text-[#FFF8E1]/50 focus:outline-none focus:shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] transition-all font-semibold"
               />
-              <button type="submit" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#E9D5FF] hover:scale-110 transition-transform">
+              <button type="submit" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#FFF8E1] hover:scale-110 transition-transform">
                 <Search className="w-4 h-4" />
               </button>
             </form>
@@ -98,7 +98,7 @@ export default function Home() {
                   onClick={() => setActiveChip(chip)}
                   className={`px-5 py-2.5 text-xs font-heading font-extrabold uppercase tracking-wider rounded-full transition-all ${
                     isActive 
-                      ? "bg-[#E9D5FF] text-[#0A0A0C] border-2 border-[#E9D5FF] shadow-[2px_2px_0px_0px_rgba(20,20,20,1)]" 
+                      ? "bg-[#F5C542] text-[#171512] border-2 border-[#92400E] shadow-[2px_2px_0px_0px_rgba(20,20,20,1)]" 
                       : "retro-btn-dashed"
                   }`}
                 >
@@ -129,21 +129,21 @@ export default function Home() {
 
 function GameCard({ item }) {
   return (
-    <Link to={`/item/${item.slug}`} className="group block text-[#E9D5FF]">
+    <Link to={`/item/${item.slug}`} className="group block text-[#FFF8E1]">
       <div className="relative">
-        <div className="border-2 border-[#E9D5FF] rounded-3xl overflow-hidden bg-[#15141E] aspect-square relative shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
+        <div className="border-2 border-[#92400E] rounded-3xl overflow-hidden bg-[#24201A] aspect-square relative shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
           <img src={item.icon} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         </div>
         
         <div className="mt-3.5 flex items-start justify-between gap-2">
           <div>
             <h3 className="font-heading font-extrabold text-lg leading-tight group-hover:underline">{item.title}</h3>
-            <span className="font-mono text-[10px] text-[#E9D5FF]/65 font-extrabold uppercase tracking-wider block mt-1">
+            <span className="font-mono text-[10px] text-[#FFF8E1]/65 font-extrabold uppercase tracking-wider block mt-1">
               BY {item.author_name.toUpperCase()}
             </span>
           </div>
           
-          <span className="bg-[#E9D5FF] text-[#0A0A0C] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#E9D5FF]">
+          <span className="bg-[#F5C542] text-[#171512] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#92400E]">
             {item.item_type}
           </span>
         </div>
@@ -154,21 +154,21 @@ function GameCard({ item }) {
 
 function PitchUsCard() {
   return (
-    <div className="group block text-[#E9D5FF] cursor-pointer" onClick={() => toast("Contact us at pitch@qiveo.dev!")}>
+    <div className="group block text-[#FFF8E1] cursor-pointer" onClick={() => toast("Contact us at pitch@qiveo.dev!")}>
       <div className="relative">
-        <div className="border-2 border-[#E9D5FF] rounded-3xl overflow-hidden bg-[#15141E] aspect-square flex flex-col items-center justify-center p-6 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
-          <div className="w-16 h-16 border-2 border-dashed border-[#E9D5FF]/40 rounded-full flex items-center justify-center text-3xl font-extrabold">+</div>
+        <div className="border-2 border-[#92400E] rounded-3xl overflow-hidden bg-[#24201A] aspect-square flex flex-col items-center justify-center p-6 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
+          <div className="w-16 h-16 border-2 border-dashed border-[#92400E]/40 rounded-full flex items-center justify-center text-3xl font-extrabold">+</div>
         </div>
 
         <div className="mt-3.5 flex items-start justify-between gap-2">
           <div>
             <h3 className="font-heading font-extrabold text-lg leading-tight group-hover:underline">Your game here!</h3>
-            <span className="font-mono text-[10px] text-[#E9D5FF]/65 font-extrabold uppercase tracking-wider block mt-1">
+            <span className="font-mono text-[10px] text-[#FFF8E1]/65 font-extrabold uppercase tracking-wider block mt-1">
               BY YOUR STUDIO
             </span>
           </div>
 
-          <span className="bg-[#E9D5FF] text-[#0A0A0C] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#E9D5FF]">
+          <span className="bg-[#F5C542] text-[#171512] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#92400E]">
             PITCH US
           </span>
         </div>

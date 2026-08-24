@@ -32,22 +32,22 @@ export default function ReviewQueue() {
       <p className="font-mono text-xs text-warm/50 uppercase tracking-widest mb-6">// every submission &amp; new version requires review</p>
 
       {/* Vetting Pipeline & Guidance */}
-      <div className="bg-[#15141E] border-2 border-[#E9D5FF] rounded-3xl p-5 mb-8 shadow-[3px_3px_0px_0px_rgba(139,92,246,0.3)]">
-        <h2 className="font-heading font-extrabold text-sm uppercase tracking-wider text-[#8B5CF6] mb-2">Vetting Pipeline &amp; Guidance</h2>
-        <p className="text-xs text-[#E9D5FF]/70 leading-relaxed font-semibold">
-          Every submission must be validated against our content rules before going public. Refer to the <a href="/policy" target="_blank" rel="noreferrer" className="text-[#8B5CF6] hover:underline font-extrabold">Content &amp; Trust Policy</a> or the <a href="/policy#appeal" target="_blank" rel="noreferrer" className="text-[#8B5CF6] hover:underline font-extrabold">Appeal Guidelines</a> for resolving disputes.
+      <div className="bg-[#24201A] border-2 border-[#92400E] rounded-3xl p-5 mb-8 shadow-[3px_3px_0px_0px_rgba(139,92,246,0.3)]">
+        <h2 className="font-heading font-extrabold text-sm uppercase tracking-wider text-[#92400E] mb-2">Vetting Pipeline &amp; Guidance</h2>
+        <p className="text-xs text-[#FFF8E1]/70 leading-relaxed font-semibold">
+          Every submission must be validated against our content rules before going public. Refer to the <a href="/policy" target="_blank" rel="noreferrer" className="text-[#92400E] hover:underline font-extrabold">Content &amp; Trust Policy</a> or the <a href="/policy#appeal" target="_blank" rel="noreferrer" className="text-[#92400E] hover:underline font-extrabold">Appeal Guidelines</a> for resolving disputes.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-[#E9D5FF]/10 text-[11px] font-mono text-[#E9D5FF]/60">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-[#92400E]/10 text-[11px] font-mono text-[#FFF8E1]/60">
           <div>
-            <span className="text-[#8B5CF6] font-bold">1. Security Scan</span>
+            <span className="text-[#92400E] font-bold">1. Security Scan</span>
             <p className="mt-1">Check the decompiled file archive diff for network scripts or telemetry triggers.</p>
           </div>
           <div>
-            <span className="text-[#8B5CF6] font-bold">2. License Check</span>
+            <span className="text-[#92400E] font-bold">2. License Check</span>
             <p className="mt-1">Ensure the licensing tags match the developer's declarations and standard repositories.</p>
           </div>
           <div>
-            <span className="text-[#8B5CF6] font-bold">3. Metadata Validation</span>
+            <span className="text-[#92400E] font-bold">3. Metadata Validation</span>
             <p className="mt-1">Verify that summary, title, and screenshots represent appropriate game content.</p>
           </div>
         </div>

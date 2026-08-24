@@ -29,7 +29,7 @@ import Anomaly from "@/pages/admin/Anomaly";
 
 function Gate({ children, staff }) {
   const { user, ready } = useAuth();
-  if (!ready) return <div className="min-h-screen bg-[#0A0A0C] grid place-items-center"><span className="font-pixel text-[#E9D5FF]/50 text-xl animate-pulse">loading qiveo...</span></div>;
+  if (!ready) return <div className="min-h-screen bg-[#171512] grid place-items-center"><span className="font-pixel text-[#FFF8E1]/50 text-xl animate-pulse">loading qiveo...</span></div>;
   if (!user) return <Navigate to="/login" replace />;
   if (staff && !isStaff(user)) return <Navigate to="/" replace />;
   return children;
@@ -39,7 +39,7 @@ function App() {
   return (
     <AuthProvider>
       <WebSocketProvider>
-        <Toaster position="bottom-right" theme="light" toastOptions={{ style: { background: "#0A0A0C", border: "2px solid #E9D5FF", color: "#E9D5FF", fontFamily: "Plus Jakarta Sans", fontSize: "13px", borderRadius: "14px" } }} />
+        <Toaster position="bottom-right" theme="light" toastOptions={{ style: { background: "#171512", border: "2px solid #F5C542", color: "#F5C542", fontFamily: "Plus Jakarta Sans", fontSize: "13px", borderRadius: "14px" } }} />
         <BrowserRouter>
           <BackgroundPixelStars />
           <Routes>
