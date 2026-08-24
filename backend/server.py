@@ -830,7 +830,12 @@ class ReportInput(BaseModel):
 
 
 class ModerationInput(BaseModel):
-    action: Literal["approve", "reject", "request_changes", "quarantine"]
+    action: Literal["approve", "reject", "request_changes", "quarantine", "flag", "delete"]
+    reason: str = ""
+
+class BulkModerationInput(BaseModel):
+    mod_ids: List[str]
+    action: Literal["approve", "reject", "request_changes", "quarantine", "flag", "delete"]
     reason: str = ""
 
 
@@ -1533,6 +1538,46 @@ async def admin_overview(user: dict = Depends(require_staff())):
     }
 
 
+@api.get("/admin/mods")
+async def admin_list_mods(page: int = 1, limit: int = 20, search: str = "", status: str = "", category: str = "", user: dict = Depends(require_staff("content_reviewer", "ts_moderator"))):
+    query = {}
+    if status:
+        query["status"] = status
+    if category:
+        query["category"] = category
+    if search:
+        query["$or"] = [
+            {"title": {"$regex": search, "$options": "i"}},
+            {"author_name": {"$regex": search, "$options": "i"}}
+        ]
+        
+    skip = (page - 1) * limit
+    total = await db.mods.count_documents(query)
+    mods = await db.mods.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    return {"items": mods, "total": total}
+
+@api.post("/admin/mods/bulk")
+async def bulk_moderate_mods(data: BulkModerationInput, user: dict = Depends(require_staff("content_reviewer", "ts_moderator"))):
+    for mod_id in data.mod_ids:
+        mod = await db.mods.find_one({"id": mod_id})
+        if not mod: continue
+        
+        if data.action == "delete":
+            await db.mods.delete_one({"id": mod_id})
+            await db.versions.delete_many({"mod_id": mod_id})
+            await db.comments.delete_many({"mod_id": mod_id})
+            await audit(user, "mod_delete", "mod", mod_id, before={"status": mod.get("status")}, after={"reason": data.reason})
+            await notify(mod["author_id"], "mod_delete", f"Your project \"{mod['title']}\" was deleted." + (f" Reason: {data.reason}" if data.reason else ""), "")
+        else:
+            status_map = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested", "quarantine": "quarantined", "flag": "flagged"}
+            new_status = status_map[data.action]
+            await db.mods.update_one({"id": mod_id}, {"$set": {"status": new_status, "review_reason": data.reason, "updated_at": now_iso()}})
+            await manager.broadcast({"type": "status_updated", "mod_id": mod_id, "status": new_status})
+            await audit(user, f"mod_{data.action}", "mod", mod_id, before={"status": mod.get("status")}, after={"status": new_status, "reason": data.reason})
+            await notify(mod["author_id"], f"mod_{data.action}", f"Your project \"{mod['title']}\" was {new_status.replace('_', ' ')}." + (f" Reason: {data.reason}" if data.reason else ""), f"/item/{mod['slug']}")
+    
+    return {"success": True, "count": len(data.mod_ids)}
+
 @api.get("/admin/queue")
 async def review_queue(user: dict = Depends(require_staff("content_reviewer", "ts_moderator"))):
     mods = await db.mods.find({"status": "in_review"}, {"_id": 0}).sort("created_at", 1).to_list(200)
@@ -1556,7 +1601,15 @@ async def moderate_mod(mod_id: str, data: ModerationInput, user: dict = Depends(
     mod = await db.mods.find_one({"id": mod_id})
     if not mod:
         raise HTTPException(status_code=404, detail="Mod not found")
-    status_map = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested", "quarantine": "quarantined"}
+    if data.action == "delete":
+        await db.mods.delete_one({"id": mod_id})
+        await db.versions.delete_many({"mod_id": mod_id})
+        await db.comments.delete_many({"mod_id": mod_id})
+        await audit(user, "mod_delete", "mod", mod_id, before={"status": mod.get("status")}, after={"reason": data.reason})
+        await notify(mod["author_id"], "mod_delete", f"Your project \"{mod['title']}\" was deleted." + (f" Reason: {data.reason}" if data.reason else ""), "")
+        return {"status": "deleted"}
+
+    status_map = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested", "quarantine": "quarantined", "flag": "flagged"}
     new_status = status_map[data.action]
     await db.mods.update_one({"id": mod_id}, {"$set": {"status": new_status, "review_reason": data.reason, "updated_at": now_iso()}})
     
@@ -1577,7 +1630,11 @@ async def moderate_version(version_id: str, data: ModerationInput, user: dict = 
     version = await db.versions.find_one({"id": version_id})
     if not version:
         raise HTTPException(status_code=404, detail="Version not found")
-    status_map = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested", "quarantine": "quarantined"}
+    if data.action == "delete":
+        await db.versions.delete_one({"id": version_id})
+        return {"status": "deleted"}
+
+    status_map = {"approve": "approved", "reject": "rejected", "request_changes": "changes_requested", "quarantine": "quarantined", "flag": "flagged"}
     new_status = status_map[data.action]
     await db.versions.update_one({"id": version_id}, {"$set": {"status": new_status, "review_reason": data.reason}})
     if data.action == "approve" and version.get("mod_id"):

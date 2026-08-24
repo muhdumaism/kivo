@@ -18,6 +18,7 @@ import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
+import AdminMods from "@/pages/admin/AdminMods";
 import ReviewQueue from "@/pages/admin/ReviewQueue";
 import Reports from "@/pages/admin/Reports";
 import UsersTrust from "@/pages/admin/UsersTrust";
@@ -59,6 +60,7 @@ function App() {
             <Route path="/creator/new" element={<Gate><NewMod /></Gate>} />
             <Route path="/admin" element={<Gate staff><AdminLayout /></Gate>}>
               <Route index element={<AdminOverview />} />
+              <Route path="mods" element={<AdminMods />} />
               <Route path="queue" element={<ReviewQueue />} />
               <Route path="reports" element={<Reports />} />
               <Route path="users" element={<UsersTrust />} />

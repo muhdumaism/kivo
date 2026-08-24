@@ -71,12 +71,9 @@ export default function CreatorDashboard() {
               </div>
               {m.review_reason && m.status !== "approved" && <p className="font-mono text-xs text-mustard max-w-xs">"{m.review_reason}"</p>}
               <StatusBadge status={m.status} testid={`creator-status-${m.slug}`} />
-              <Link to={`/project/${m.slug}/edit`} data-testid={`edit-mod-${m.slug}`} className="flex items-center gap-1.5 bg-violet text-warm px-4 py-2 rounded-full text-xs font-semibold hover:-translate-y-0.5 transition-transform">
-                GOTO
+              <Link to={`/project/${m.slug}/edit`} data-testid={`edit-mod-${m.slug}`} className="flex items-center gap-1.5 bg-plum2 border border-plumborder text-lavender2 px-4 py-2 rounded-full text-xs font-bold hover:-translate-y-0.5 transition-transform hover:text-warm hover:border-violet/60">
+                Go to
               </Link>
-              <button data-testid={`upload-version-${m.slug}`} onClick={() => setUploadFor(m)} className="flex items-center gap-1.5 bg-teal text-warm px-4 py-2 rounded-full text-xs font-semibold hover:-translate-y-0.5 transition-transform">
-                <Upload className="w-3.5 h-3.5" />Upload file
-              </button>
             </div>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+5555555555555555555556import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth, isStaff } from "@/context/AuthContext";
 import { useWebSocket } from "@/context/WebSocketContext";
@@ -84,7 +84,7 @@ function NotificationBell() {
   const ref = useRef(null);
   const { addListener } = useWebSocket();
   useOutside(ref, () => setOpen(false));
-  const load = () => api.get("/notifications").then((r) => setData(r.data)).catch(() => {});
+  const load = () => api.get("/notifications").then((r) => setData(r.data)).catch(() => { });
   useEffect(() => { load(); const i = setInterval(load, 30000); return () => clearInterval(i); }, []);
 
   useEffect(() => {

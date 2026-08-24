@@ -160,7 +160,7 @@ export default function ProductDetail() {
             </div>
             
             <div className="bg-[#0A0A0C] border-2 border-[#E9D5FF] rounded-3xl p-6 min-h-[300px] shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]">
-              {tab === "Description" && <div className="prose max-w-none text-[#E9D5FF] font-medium" dangerouslySetInnerHTML={{ __html: renderMarkdown(item.description) }} />}
+              {tab === "Description" && <div className="prose prose-invert max-w-none prose-headings:font-heading prose-headings:font-black prose-headings:text-[#E9D5FF] prose-p:text-[#E9D5FF]/80 prose-a:text-amber prose-a:underline hover:prose-a:text-[#E9D5FF] prose-strong:text-[#E9D5FF] prose-code:text-amber prose-code:bg-[#15141E] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#15141E] prose-pre:border-2 prose-pre:border-[#E9D5FF] prose-pre:shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] prose-img:rounded-xl prose-img:border-2 prose-img:border-[#E9D5FF] prose-img:shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] prose-ul:list-disc prose-ol:list-decimal prose-li:text-[#E9D5FF]/80 prose-blockquote:border-l-4 prose-blockquote:border-amber prose-blockquote:text-[#E9D5FF]/60 prose-blockquote:font-mono prose-blockquote:italic prose-table:border-collapse prose-th:border prose-th:border-[#E9D5FF]/20 prose-th:p-2 prose-td:border prose-td:border-[#E9D5FF]/20 prose-td:p-2 font-medium text-[#E9D5FF]" dangerouslySetInnerHTML={{ __html: renderMarkdown(item.description) }} />}
               {tab === "Gallery" && <Gallery item={item} />}
               {tab === "Changelog" && <Changelog versions={item.versions} />}
               {tab === "Versions" && <Versions versions={item.versions} />}

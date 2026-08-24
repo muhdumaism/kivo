@@ -1,10 +1,11 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LayoutDashboard, ClipboardCheck, Flag, Users, ScrollText, Activity, Box, ArrowLeft, Newspaper, Mail } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Flag, Users, ScrollText, Activity, Box, ArrowLeft, Newspaper, Mail, Shield } from "lucide-react";
 
 const NAV = [
   ["/admin", "Overview", LayoutDashboard, true],
   ["/admin/queue", "Review Queue", ClipboardCheck],
+  ["/admin/mods", "Mod Moderation", Shield],
   ["/admin/reports", "Reports & Abuse", Flag],
   ["/admin/users", "Users & Trust", Users],
   ["/admin/news", "Publish News", Newspaper],
@@ -14,9 +15,9 @@ const NAV = [
 ];
 
 const PERMS = {
-  super_admin: ["/admin", "/admin/queue", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/audit", "/admin/anomalies"],
-  ts_moderator: ["/admin", "/admin/queue", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/audit", "/admin/anomalies"],
-  content_reviewer: ["/admin", "/admin/queue", "/admin/anomalies"],
+  super_admin: ["/admin", "/admin/queue", "/admin/mods", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/audit", "/admin/anomalies"],
+  ts_moderator: ["/admin", "/admin/queue", "/admin/mods", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/audit", "/admin/anomalies"],
+  content_reviewer: ["/admin", "/admin/queue", "/admin/mods", "/admin/anomalies"],
   support_agent: ["/admin", "/admin/reports", "/admin/users", "/admin/contact", "/admin/anomalies"],
   auditor: ["/admin", "/admin/users", "/admin/audit", "/admin/anomalies"],
 };

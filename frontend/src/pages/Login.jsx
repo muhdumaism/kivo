@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { apiError } from "@/lib/api";
@@ -14,9 +14,12 @@ export default function Login() {
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
 
+  const hasFired = useRef(false);
+
   useEffect(() => {
     const token = params.get("token");
-    if (token) {
+    if (token && !hasFired.current) {
+      hasFired.current = true;
       setBusy("oauth");
       localStorage.setItem("qiveo_token", token);
       refresh()
