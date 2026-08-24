@@ -1,0 +1,73 @@
+{
+  "summary": "Redesign-iteration (Minecraft-only marketplace) verification. Backend: converted/repaired the existing pytest suite for the new seed (old slugs lithium-performance/sodium-extra/terralith-worldgen/dungeon-dwellers/quantum-tools-beta -> aether-knight/shadow-ninja/nether-gate-reforged/ember-fox/neon-golem-beta) and added a new /app/backend/tests/test_redesign.py (38 tests) for demo auth, item_type/rarity filters, marketplace fields, product detail, download counter, seeded queue/reports and the Minecraft hub. Also fixed conftest's admin-credential regex which silently SKIPPED all 23 admin tests after the credentials file format changed. Result: 105 passed / 2 failed (98%). Frontend (Playwright, 5 runs): home landing, category tiles, browse filters/rarity/sort/search, product detail (voxel hero, 4 tabs, real file download, review + comment + report submission, similar grid), demo Google/Discord/Staff one-tap logins, Creator Studio (KPIs, 14-day chart, 11 drop rows), version upload via modal, 4-step wizard with pricing-paid disabled and auto-publish, full admin panel (overview, queue approve + version diff modal, reports resolve with SLA timers, users & trust selects/actions, audit log, anomalies), RBAC (BlockFan redirected off /admin, no Staff nav) and the new mobile hamburger at 390px. Zero JS page errors on any route. All QA data was removed and the seeded state restored (11 mods / 10 approved, neon-golem-beta in_review + 1 pending version, 2 open reports, 7 users, 0 reviews/comments, aether-knight back to 4.9).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "POST /api/auth/login", "issue": "Brute-force lockout is implemented but INEFFECTIVE behind the ingress. login_attempts is keyed on `f\"{request.client.host}:{email}\"` and request.client.host is the ingress pod IP; the cluster has multiple replicas, so counters split across identifiers (observed 10.208.135.204 and 10.208.135.205 rows with count 4 and 2 for the same email) and never reach the threshold of 5. Verified: 8 consecutive wrong passwords all returned 401, then the correct password succeeded. Key the counter on the email alone (and/or the first X-Forwarded-For hop).", "priority": "HIGH"}
+    ],
+    "minor": [
+      {"endpoint": "POST /api/auth/login", "issue": "Still never sets the httpOnly access_token cookie although get_current_user reads request.cookies.get('access_token') - dead code path; the JWT lives only in localStorage (XSS-readable)."},
+      {"endpoint": "POST /api/creator/mods", "issue": "rarity defaults to \"\" and is not validated against Common/Rare/Epic/Legendary; item_type is not validated against the 6 allowed types. A wizard-created drop with no rarity renders with NO rarity badge (RarityBadge returns null) and is invisible to every /browse rarity chip. Default to 'Common' and reject unknown item_type/rarity."},
+      {"endpoint": "GET /api/mods, /api/admin/users, /api/admin/audit", "issue": "Still no pagination - hard-coded to_list(50/300/500) caps (carried over from iteration 1)."},
+      {"endpoint": "POST /api/creator/mods/{id}/versions", "issue": "Still no server-side size cap (unbounded await file.read()) and detected_type is extension-based only, while the modal copy says 'Stored compressed · 200MB max'. The 200MB limit is not enforced anywhere."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "ReviewQueue VersionDiff modal / UploadVersionModal", "issue": "Neither modal closes on Escape (only the X button or backdrop click). While the diff modal is open its fixed overlay intercepts all pointer events, so a user who reaches for Esc is stuck until they find the X. Add a keydown handler.", "selector": "[data-testid='close-diff']", "priority": "LOW"},
+      {"component": "Navbar mobile drawer", "issue": "The mobile menu links (Home/Explore/Collectibles/Trust/Staff Panel/Creator Studio/Profile/Log out) have no data-testid, unlike their desktop counterparts - only nav-menu-toggle is testable. Add matching testids.", "selector": "[data-testid='nav-menu-toggle']", "priority": "LOW"},
+      {"component": "AdminLayout.jsx", "issue": "UNFIXED from iteration 1: all 6 sidebar items render for every staff role, so a content_reviewer clicking 'Users & Trust' still gets a blank page + 'Insufficient role' toast.", "selector": "[data-testid='admin-nav-users']", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Item cards (/browse, /, /item/*)", "issues": ["The rarity badge sits directly on top of the voxel render with only a 10% tint (e.g. Epic = text-coral2 on bg-coral/10); on the light lavender/white voxel backgrounds the 'EPIC'/'RARE' label is washed out and hard to read. Add a dark scrim (bg-ink/60 + backdrop-blur) like the item_type pill already uses."]},
+      {"screen": "Upload Version + Version Diff modals", "issues": ["These two modals still use square corners and the legacy amber/slate accent tokens while every other surface in the redesign is rounded-2xl purple/coral - the reskin missed them visually even though the colours resolve."]},
+      {"screen": "Home / Browse / Product detail / Admin (verified OK)", "issues": ["Palette, corner-bracket frames, parallax cubes and fade-up reveals render correctly at 1920x1080; no horizontal overflow at 390px on home or /browse; all voxel images load (0 broken images); previous false 'every upload is scanned' marketing copy is gone (now 'human-reviewed')."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_redesign.py",
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_public.py",
+    "/app/backend/tests/test_auth.py",
+    "/app/backend/tests/test_creator.py",
+    "/app/backend/tests/test_admin.py",
+    "/app/backend/tests/test_engagement.py",
+    "/app/backend/tests/cleanup_qa_data.py",
+    "/app/backend/tests/restore_seed_state.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Key the login lockout on email (or X-Forwarded-For) instead of request.client.host - the current per-pod-IP key makes the 5-attempt lockout unreachable behind the ingress (8 failed logins produced no throttle).",
+    "Validate/default rarity and item_type in POST /api/creator/mods (rarity currently defaults to \"\", so newly published drops show no rarity badge and never appear under any rarity filter).",
+    "Either set the httpOnly access_token cookie on login or delete the dead cookie branch in get_current_user.",
+    "Enforce the advertised 200MB upload cap server-side (stream instead of await file.read()).",
+    "Close the Version Diff / Upload Version modals on Escape.",
+    "Add a dark scrim behind the rarity badge on item cards for legibility over light voxel renders.",
+    "Restyle the Upload Version and Version Diff modals to the new rounded purple/coral language.",
+    "Hide admin sidebar items the current staff role cannot access (still open from iteration 1)."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now 982 lines mixing auth/public/creator/admin/seed - split into routers before it grows again.",
+    "Rate limiting on request.client.host is unreliable in Kubernetes; centralise a get_client_ip(request) helper that prefers the first X-Forwarded-For hop and use it for any abuse counter.",
+    "create_mod accepts arbitrary payload dicts (payload: dict) with no Pydantic model, so item_type/rarity/license/tags are unvalidated free text - model it so bad taxonomy values can't enter the catalogue.",
+    "The rating baseline fix (base_rating_sum/base_rating_count) is good, but any script that recomputes rating_avg must use the baseline too - the old cleanup helper silently reset seeded social proof; fixed in cleanup_qa_data.py.",
+    "app.on_event('startup'/'shutdown') is still deprecated - migrate to the lifespan context manager."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_redesign.py",
+    "/app/backend/tests/conftest.py",
+    "/app/backend/tests/test_public.py",
+    "/app/backend/tests/test_creator.py",
+    "/app/backend/tests/test_engagement.py",
+    "/app/backend/tests/test_admin.py",
+    "/app/backend/tests/cleanup_qa_data.py",
+    "/app/backend/tests/restore_seed_state.py"
+  ],
+  "success_rate": {"backend": "98% (105/107 pytest)", "frontend": "100% of tested flows functional (issues found are UX/design only)"},
+  "seed_data_creation": "QA-created data (test drops, a 9.9.9 version, one review, one comment, one spam report, wizard drop 'TEST_QA Voxel Drop') was all removed. Run `python tests/cleanup_qa_data.py` then `python tests/restore_seed_state.py` from /app/backend after any test run. Final verified state: 11 mods (10 approved + neon-golem-beta in_review), 1 pending version, 2 open reports, 7 users, 0 reviews, 0 comments, aether-knight rating 4.9 (3401), blockfan trust_tier=new.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "/app/memory/test_credentials.md is accurate. NOTE: its format changed from 'Email: `x`' to '- Super admin: `x` / `y`', which silently skipped 23 admin tests via pytest.skip in conftest; the regex now handles both and fails loudly instead of skipping.",
+  "context_for_next_testing_agent": "Suite: /app/backend/tests (conftest + test_public/test_auth/test_creator/test_admin/test_engagement/test_redesign). Run `cd /app/backend && python -m pytest tests/ -q --junitxml=/app/test_reports/pytest/pytest_results.xml` (pytest.ini forces -n 2 --dist loadscope; do not edit). Exactly 2 tests are intentional red flags: test_brute_force_lockout (ineffective per-pod-IP keying) and test_login_sets_httponly_cookie. Iteration-1 gaps that are now FIXED and covered by green tests: unapproved mod detail exposure, revoke-sessions invalidation, age_confirm enforcement, blank-comment rejection, seeded rating baseline (base_rating_sum), seeded pending version now has a real file. Playwright covered every flow in the review request end to end with zero JS errors; the only remaining items are the UX/design notes above. Always run cleanup_qa_data.py + restore_seed_state.py afterwards. Gotchas: the upload modal field testid is `version-number` (not version-number-input); trust select options are new/established/verified; the version diff modal ignores Escape so click [data-testid='close-diff'] instead.",
+  "rca_of_the_issue": "Brute-force lockout: server.py:224-238 builds the throttle key as `{request.client.host}:{email}`. Behind the Kubernetes ingress, request.client.host is the proxy pod IP and several proxy replicas serve the same client, so the failure counter is sharded across rows (verified in the login_attempts collection: two documents for the same email with count 4 and 2). The >=5 branch is therefore never reached and unlimited 401s are returned. Mitigation: key on the normalised email (optionally combined with the first X-Forwarded-For hop) and add a global per-IP limiter. Secondary RCA: 23 admin pytest cases were silently skipped because conftest's admin_creds fixture parsed the old 'Email: `..`' format from test_credentials.md and called pytest.skip on failure; the regex now accepts the new '- Super admin: `email` / `password`' format and uses pytest.fail so credential drift can never hide test coverage again."
+}

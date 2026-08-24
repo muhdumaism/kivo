@@ -1,0 +1,99 @@
+{
+  "summary": "Iteration-3 (Modrinth restructure) verification. Backend: added /app/backend/tests/test_modrinth.py (25 tests) covering follow/favorite/bookmark toggles + /api/me/library persistence, visibility (public/unlisted/private) listing rules, PUT /api/creator/mods/{id} field persistence + 403/404 paths, gallery upload + /api/gallery serve, notifications (moderation -> owner notify, read-all, auth), collections CRUD + item toggle + owner isolation, organizations. Full regression suite run: 130 passed / 2 failed (98.5%). Frontend (Playwright, 6 runs, 1920x1080 + 390x844): navbar '+' create dropdown (New project/server/collection/organization), Create Project modal (type/name->slug autofill/owner/3-way visibility/summary) creating a project and redirecting to /project/{slug}/edit, Discover-content dropdown, notification bell + unread badge + link navigation + auto read-all, avatar menu (staff-only 'Staff panel'/'Active reports' correctly present only for staff), full ProjectEdit sidebar (general save, monetization toggle, description, license, tags, version upload via modal, gallery image upload, 'Project page' link), project detail Modrinth layout (icon/status pill/stats/tabs incl. owner-only Moderation, Compatibility+Creators+Details cards, download, follow/favorite/bookmark toggling AND persisting after reload and in /api/me/library, review+comment+report), Collections (?new=1 deep link, create, open, empty state), staff admin panel (queue approve neon-golem-beta, reports/users/audit/anomalies), landing hero (Beta Release pill, Download Kivo, mock app preview). Zero JS page errors on every route tested. All QA data cleaned and seed restored (11 mods / 10 approved / neon-golem-beta in_review, 7 users, 2 open reports, 0 collections/reviews/comments, gallery uploads deleted).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/mods/{slug}",
+        "issue": "PRIVATE projects are fully readable by anyone (anonymous included) via direct link. The endpoint only gates on status != 'approved' and never checks `visibility`. Verified: created project with visibility=private (slug test-qa3-secret-private), then GET as anonymous returned 200 with full data and /item/{slug} rendered the whole project page while logged out. Add: if mod['visibility']=='private' -> allow only owner or STAFF_ROLES (404 otherwise).",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "POST /api/auth/login",
+        "issue": "Pre-existing (iteration_2): never sets the httpOnly access_token cookie although get_current_user reads request.cookies['access_token'] — dead code path, JWT lives only in localStorage. test_auth.py::test_login_sets_httponly_cookie still fails."
+      },
+      {
+        "endpoint": "POST /api/creator/mods",
+        "issue": "The `slug` sent by the Create Project modal (cp-slug, user-editable) is ignored — slug is always slugify(title). Either honour/validate the submitted slug or make the field read-only in the modal."
+      },
+      {
+        "endpoint": "POST /api/creator/mods/{id}/versions + GET /api/mods/{slug}",
+        "issue": "A version's game_versions / mod_loaders are not propagated to the project document, so the Compatibility sidebar card keeps showing 'Any' and no Platforms row right after the first upload (verified on a QA project uploaded with game_versions=1.21)."
+      },
+      {
+        "endpoint": "seed()",
+        "issue": "Seed inconsistency: neon-golem-beta has author_id = creator@kivo.dev (AuroraBlocks) but author_name 'NewbieBlocks'. The detail page Creators card shows '@NewbieBlocks · Owner' while the Google-demo user (AuroraBlocks) is the one with owner rights (Edit project + Moderation tab)."
+      },
+      {
+        "endpoint": "POST /api/collections/{cid}/items",
+        "issue": "mod_id is not validated — any arbitrary/nonexistent id can be pushed into a collection (returns active:true, count:1)."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ProjectEdit (/project/:slug/edit)",
+        "issue": "Not owner-gated in the UI: a non-owner (BlockFan demo) opening /project/aether-knight/edit gets the full edit form pre-filled with someone else's project; saving only fails afterwards with a 'Not your project' toast. Should redirect / show 'not allowed' when user.id !== item.author_id and not staff.",
+        "selector": "[data-testid=\"edit-name\"]",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "ProductDetail action buttons",
+        "issue": "The Follow button uses a Download arrow icon while the follower stat uses a Heart and the Favorite button also uses a Heart — icons are misleading (follow should be heart/bell-ish, favorite a star, etc.). Buttons have no visible labels/aria-labels, only title attributes.",
+        "selector": "[data-testid=\"follow-btn\"]",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Download counter on project detail",
+        "issue": "Cosmetic: the counter is formatted as '128.0K' so a real +1 increment (verified 128024 -> 128025 via API) is invisible after clicking Download; consider exact numbers under 1M or a tooltip.",
+        "affected_selectors": ["[data-testid=\"download-btn\"]"]
+      },
+      {
+        "flow": "Project edit -> tags",
+        "issue": "Tags saved from the edit page (edit-tags-save persists correctly server-side) are never rendered anywhere on /item/{slug} — no tags row on the detail page.",
+        "affected_selectors": ["[data-testid=\"edit-tags-save\"]"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "Create Project modal",
+        "issues": ["React console warning on every open: '<span> cannot be a child of <option>' hydration error, caused by dynamic children inside <option> in CreateProjectModal (cp-owner select). No functional impact but pollutes the console; use plain string children in <option>."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_modrinth.py",
+    "/app/backend/tests/cleanup_qa_data_iter3.py",
+    "/app/test_reports/pytest/pytest_results_iter3.xml"
+  ],
+  "action_items": [
+    "CRITICAL: gate GET /api/mods/{slug} on visibility=='private' (owner/staff only) — currently any anonymous visitor can read/render a private project by direct link.",
+    "Owner-gate the /project/:slug/edit page in the UI (redirect non-owners instead of showing a populated edit form).",
+    "Decide on cp-slug: either honour the submitted slug in POST /api/creator/mods or make the field read-only.",
+    "Propagate version game_versions/mod_loaders to the project doc so the Compatibility card is accurate after the first upload.",
+    "Fix seed author_name for neon-golem-beta (says NewbieBlocks, owned by AuroraBlocks/creator@kivo.dev).",
+    "Validate mod_id in POST /api/collections/{cid}/items.",
+    "Optional (carry-over): set the httpOnly access_token cookie on login, or delete the cookie read path in get_current_user."
+  ],
+  "critical_code_review_comments": [
+    "server.py list_mods correctly excludes private+unlisted, but get_mod does not — visibility checks must live in one shared helper to avoid this class of leak.",
+    "server.py is 1196 lines; interactions/collections/notifications/organizations should be split into routers.",
+    "_toggle() recomputes the count client-side from a stale mod doc (max(0, old+inc)) instead of returning the value from an atomic find_one_and_update — concurrent toggles can report a wrong count.",
+    "GET /api/mods, /api/admin/users and /api/admin/audit still have no pagination (limit only)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_modrinth.py",
+    "/app/backend/tests/cleanup_qa_data_iter3.py"
+  ],
+  "success_rate": {"backend": "98% (130/132 pytest)", "frontend": "95% (all new flows working; 1 UI RBAC gap + minor polish)"},
+  "seed_data_creation": "QA projects (TEST_QA3 *), 1 collection, 1 org, 2 gallery images, 1 version, review/comment/report on aether-knight — ALL deleted; seed restored to 11 mods/10 approved/neon-golem-beta in_review/7 users/2 open reports/0 collections/0 reviews/0 comments and uploads/gallery emptied.",
+  "should_call_test_agent_after_fix": true,
+  "should_main_agent_self_test": false,
+  "test_credentials": "/app/memory/test_credentials.md is accurate (demo google/discord/staff buttons + creator@kivo.dev/Creator!2026, admin@kivo.dev/KivoAdmin!2026, blockfan@kivo.dev/BlockFan!2026 all work).",
+  "context_for_next_testing_agent": "Run `python /app/backend/tests/cleanup_qa_data_iter3.py` after any QA run (supersedes cleanup_qa_data.py; also clears collections/orgs/notifications/follow-favorite-bookmark arrays and resets neon-golem-beta to in_review) and `rm -f /app/backend/uploads/gallery/*`. New suite: tests/test_modrinth.py. Known open failures: test_modrinth TestVisibility::test_private_hidden_from_listing_but_owner_can_open (private leak, intentional fail assertion) and test_auth::test_login_sets_httponly_cookie. Everything else in the Modrinth iteration verified working end-to-end including notifications after staff moderation.",
+  "rca_of_the_issue": "Private-project leak: list_mods filters visibility ($nin private/unlisted) but get_mod only checks status != 'approved'. Since verified creators get status='approved' immediately, a private project passes the only guard and is returned to anonymous callers; the ProductDetail page then renders it (it merely shows a 'PRIVATE' pill). Repro: POST /api/creator/mods with visibility=private as creator@kivo.dev, then GET /api/mods/{slug} with no Authorization header -> 200. Fix: in get_mod, if visibility in ('private',) require viewer == author or staff, else 404."
+}
