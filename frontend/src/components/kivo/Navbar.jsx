@@ -167,14 +167,12 @@ function AvatarMenu({ user, onSoon, onLogout }) {
           <div className="h-px bg-plumborder my-1" />
           <MenuLink to="/profile" icon={UserIcon} label="Profile" />
           <MenuItem icon={Server} label="My servers" onClick={onSoon} />
-          <MenuLink to="/profile" icon={Settings} label="Settings" />
           <div className="h-px bg-plumborder my-1" />
           {staff && <MenuLink to="/admin/reports" icon={Flag} label="Active reports" />}
           <MenuLink to="/collections" icon={FolderHeart} label="Collections" />
           <div className="h-px bg-plumborder my-1" />
           <MenuLink to="/creator" icon={Boxes} label="Projects" />
           <MenuItem icon={Building2} label="Organizations" onClick={onSoon} />
-          <MenuLink to="/creator" icon={BarChart3} label="Analytics" />
           {staff && <><div className="h-px bg-plumborder my-1" /><MenuLink to="/admin" icon={Package} label="Staff panel" /></>}
           <div className="h-px bg-plumborder my-1" />
           <button data-testid="nav-logout" onClick={onLogout} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-rose hover:bg-rose/10"><LogOut className="w-4 h-4" />Sign out</button>
