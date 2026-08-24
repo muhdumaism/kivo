@@ -8,7 +8,7 @@ import { Search, ArrowRight, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useWebSocket } from "@/context/WebSocketContext";
 
-const CHIPS = ["All Games", "Roguelite", "Turn-Based Strategy", "FPS", "RPG"];
+const CHIPS = ["All Games", "Minecraft", "Roblox", "Hytale", "Discord"];
 
 export default function Home() {
   const [trending, setTrending] = useState([]);
@@ -51,11 +51,7 @@ export default function Home() {
       item.author_name.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (activeChip === "All Games") return matchesSearch;
-    if (activeChip === "Roguelite") return matchesSearch && (item.tags?.includes("stealth") || item.tags?.includes("adventure"));
-    if (activeChip === "RPG") return matchesSearch && item.tags?.includes("rpg");
-    if (activeChip === "Turn-Based Strategy") return matchesSearch && item.item_type === "Mod";
-    if (activeChip === "FPS") return matchesSearch && item.item_type === "World";
-    return matchesSearch;
+    return matchesSearch && item.game_slug === activeChip.toLowerCase();
   });
 
   return (

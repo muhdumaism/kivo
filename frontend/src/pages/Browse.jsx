@@ -47,7 +47,7 @@ export default function Browse() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
       <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full">
         <Reveal>
