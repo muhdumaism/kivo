@@ -1103,6 +1103,13 @@ async def update_profile(payload: dict, user: dict = Depends(get_current_user)):
         updates["two_factor_enabled"] = bool(payload["two_factor_enabled"])
     if updates:
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
+        
+        if "name" in updates:
+            new_name = updates["name"]
+            await db.mods.update_many({"author_id": user["id"]}, {"$set": {"author_name": new_name}})
+            await db.reviews.update_many({"user_id": user["id"]}, {"$set": {"user_name": new_name}})
+            await db.comments.update_many({"user_id": user["id"]}, {"$set": {"user_name": new_name}})
+            
     fresh = await db.users.find_one({"id": user["id"]})
     return clean_user(fresh)
 
@@ -1115,6 +1122,10 @@ async def upload_avatar(file: UploadFile = File(...), user: dict = Depends(get_c
         f.write(await file.read())
     url = f"/api/uploads/gallery/{fname}"
     await db.users.update_one({"id": user["id"]}, {"$set": {"avatar_url": url}})
+    
+    await db.reviews.update_many({"user_id": user["id"]}, {"$set": {"user_avatar": url}})
+    await db.comments.update_many({"user_id": user["id"]}, {"$set": {"user_avatar": url}})
+    
     return {"avatar_url": url}
 
 
