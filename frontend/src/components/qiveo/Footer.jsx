@@ -17,7 +17,10 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-[#E9D5FF]/10">
           <div className="md:col-span-2">
-            <span className="font-heading font-black text-5xl tracking-tighter text-[#E9D5FF] block uppercase">QIVEO</span>
+            <div className="flex items-center gap-3 mb-2">
+              <img src="/qiveo-logo-nobg-.png" alt="QIVEO" className="h-12" />
+              <span className="font-heading font-black text-5xl tracking-tighter text-[#E9D5FF] uppercase">QIVEO.dev</span>
+            </div>
             <p className="text-[#E9D5FF]/70 text-sm mt-4 max-w-sm font-medium leading-relaxed">
               Qiveo is a developer-friendly marketplace of indie games, skins, mods, and blocky collectibles. Every drop is human-reviewed.
             </p>

@@ -1852,6 +1852,26 @@ async def upload_gallery(mod_id: str, file: UploadFile = File(...), user: dict =
     await db.mods.update_one({"id": mod_id}, {"$set": {"gallery": gallery, "updated_at": now_iso()}})
     return {"url": url, "gallery": gallery}
 
+@api.post("/creator/mods/{mod_id}/icon")
+async def upload_icon(mod_id: str, file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod:
+        raise HTTPException(status_code=404, detail="Mod not found")
+    if mod["author_id"] != user["id"] and user.get("role") not in STAFF_ROLES:
+        raise HTTPException(status_code=403, detail="Not your project")
+    
+    gdir = UPLOAD_DIR / "gallery"
+    gdir.mkdir(parents=True, exist_ok=True)
+    ext = file.filename.split(".")[-1]
+    fname = f"{mod_id}_icon_{int(time.time())}.{ext}"
+    path = gdir / fname
+    with open(path, "wb") as f:
+        f.write(await file.read())
+    
+    url = f"/api/gallery/{fname}"
+    await db.mods.update_one({"id": mod_id}, {"$set": {"icon": url, "updated_at": now_iso()}})
+    return {"url": url}
+
 
 @api.get("/gallery/{fname}")
 async def serve_gallery(fname: str):

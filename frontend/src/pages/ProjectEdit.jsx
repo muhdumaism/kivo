@@ -106,6 +106,21 @@ function General({ item, save }) {
     }
   };
 
+  const handleIconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const { data } = await api.post(`/creator/mods/${item.id}/icon`, fd);
+      setIcon(data.url);
+      save({ icon: data.url });
+      toast.success("Icon uploaded");
+    } catch (err) {
+      toast.error(apiError(err.response?.data?.detail));
+    }
+  };
+
   return (
     <div className="space-y-5 max-w-xl relative">
       <h2 className="font-heading font-bold text-warm text-lg">Project information</h2>
@@ -117,9 +132,18 @@ function General({ item, save }) {
       <div><label className="block text-sm font-semibold text-warm mb-1.5">Summary</label><textarea data-testid="edit-summary" value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" /></div>
       <div>
         <label className="block text-sm font-semibold text-warm mb-1.5">Icon</label>
-        <div className="flex items-center gap-3">
-          <img src={icon} alt="" className="w-16 h-16 rounded-lg border border-plumborder bg-plum2 object-cover" />
-          <Field label="" data-testid="edit-icon" value={icon} onChange={(e) => setIcon(e.target.value)} placeholder="Icon image URL" />
+        <div className="flex items-center gap-4">
+          <div className="relative group">
+            <img src={icon} alt="" className="w-20 h-20 rounded-2xl border-2 border-plumborder bg-plum2 object-cover" />
+            <label className="absolute inset-0 bg-ink/60 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+              <Upload className="w-6 h-6 text-warm" />
+              <input type="file" className="hidden" accept="image/*" onChange={handleIconUpload} />
+            </label>
+          </div>
+          <div className="text-sm text-lavender2/60">
+            <p>Click the image to upload a new icon.</p>
+            <p className="text-xs mt-1">1:1 aspect ratio recommended.</p>
+          </div>
         </div>
       </div>
       <div>

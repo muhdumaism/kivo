@@ -30,7 +30,8 @@ export function Navbar() {
       <header className="sticky top-0 z-50 h-16 bg-[#0A0A0C]/90 backdrop-blur-xl border-b-2 border-[#E9D5FF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-3">
           <Link to="/" data-testid="nav-logo" className="flex items-center gap-2 shrink-0">
-            <span className="font-heading font-black text-2xl tracking-tighter text-[#E9D5FF] uppercase">QIVEO</span>
+            <img src="/qiveo-logo-nobg-.png" alt="QIVEO" className="h-10" />
+            <span className="font-heading font-black text-2xl tracking-tighter text-[#E9D5FF] uppercase">QIVEO.dev</span>
           </Link>
 
           <nav className="hidden lg:flex items-center justify-center gap-6 flex-1 max-w-xl mx-auto">
