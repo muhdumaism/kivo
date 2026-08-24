@@ -51,7 +51,6 @@ function App() {
             <Route path="/policy" element={<Policy />} />
             <Route path="/news" element={<News />} />
             <Route path="/about" element={<About />} />
-            <Route path="/pitch" element={<Pitch />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile" element={<Gate><Profile /></Gate>} />
             <Route path="/collections" element={<Gate><Collections /></Gate>} />
