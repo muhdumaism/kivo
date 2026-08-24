@@ -15,7 +15,6 @@ import Collections from "@/pages/Collections";
 import Policy from "@/pages/Policy";
 import News from "@/pages/News";
 import About from "@/pages/About";
-import Pitch from "@/pages/Pitch";
 import Contact from "@/pages/Contact";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
