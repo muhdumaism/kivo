@@ -20,10 +20,10 @@ export default function News() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen flex flex-col bg-transparent">
       <Navbar />
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-[#E9D5FF]">
+      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-12 text-[#E9D5FF] w-full">
         <div className="border-b-2 border-[#E9D5FF] pb-6 mb-12">
           <span className="font-mono text-xs uppercase tracking-[0.3em] text-[#8B5CF6] font-bold">// platform updates</span>
           <h1 className="font-heading text-4xl lg:text-5xl font-black uppercase tracking-tight mt-2">Qiveo Newsroom</h1>

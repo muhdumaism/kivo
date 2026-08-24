@@ -10,6 +10,8 @@ import {
   Users, BarChart3, Upload, Trash2, ExternalLink,
 } from "lucide-react";
 
+import { Footer } from "@/pages/Home";
+
 const NAV = [
   ["general", "General", Settings], ["disclosures", "Disclosures", ShieldQuestion], ["tags", "Tags", Tags],
   ["description", "Description", FileText], ["versions", "Versions", GitBranch], ["license", "License", Scale],
@@ -33,15 +35,15 @@ export default function ProjectEdit() {
       nav(`/item/${slug}`);
     }
   }, [item, user, slug, nav]);
-  if (item === false) return <div className="min-h-screen bg-transparent"><Navbar /><p className="text-warm p-10">Not found.</p></div>;
+  if (item === false) return <div className="min-h-screen flex flex-col bg-transparent"><Navbar /><div className="flex-1 p-10"><p className="text-warm">Not found.</p></div><Footer /></div>;
   if (!item) return <div className="min-h-screen bg-transparent"><Navbar /></div>;
 
   const save = async (patch) => { try { const { data } = await api.put(`/creator/mods/${item.id}`, patch); setItem((it) => ({ ...it, ...data })); toast.success("Saved"); } catch (e) { toast.error(apiError(e.response?.data?.detail)); } };
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen flex flex-col bg-transparent">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
         {/* Top bar */}
         <div className="flex items-center gap-3 mb-6">
           <button onClick={() => nav("/creator")} className="w-9 h-9 grid place-items-center rounded-lg border border-plumborder text-lavender2 hover:border-violet/60"><ArrowLeft className="w-4 h-4" /></button>
@@ -61,7 +63,7 @@ export default function ProjectEdit() {
           </aside>
 
           <main className="bg-plum border border-plumborder rounded-2xl p-6">
-            {section === "general" && <General item={item} save={save} />}
+            {section === "general" && <General item={item} save={save} load={load} />}
             {section === "description" && <Description item={item} save={save} />}
             {section === "gallery" && <GallerySec item={item} onDone={load} />}
             {section === "versions" && <VersionsSec item={item} onUpload={() => setUploadOpen(true)} />}
@@ -76,6 +78,7 @@ export default function ProjectEdit() {
         </div>
       </div>
       {uploadOpen && <UploadVersionModal mod={item} onClose={() => setUploadOpen(false)} onDone={() => { setUploadOpen(false); load(); }} />}
+      <Footer />
     </div>
   );
 }
@@ -84,12 +87,34 @@ function Field({ label, ...p }) {
   return <div><label className="block text-sm font-semibold text-warm mb-1.5">{label}</label><input {...p} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" /></div>;
 }
 
-function General({ item, save }) {
+function General({ item, save, load }) {
   const [name, setName] = useState(item.title);
   const [summary, setSummary] = useState(item.summary);
   const [visibility, setVisibility] = useState(item.visibility || "public");
   const [icon, setIcon] = useState(item.icon);
   const [mon, setMon] = useState(!!item.monetization);
+  const [uploading, setUploading] = useState(false);
+
+  const handleIconUpload = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const fd = new FormData();
+    fd.append("file", f);
+    setUploading(true);
+    try {
+      const { data } = await api.post(`/creator/mods/${item.id}/icon`, fd, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setIcon(data.url);
+      toast.success("Icon updated successfully");
+      load();
+    } catch (e) {
+      toast.error(apiError(e.response?.data?.detail));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-5 max-w-xl">
       <h2 className="font-heading font-bold text-warm text-lg">Project information</h2>
@@ -101,9 +126,30 @@ function General({ item, save }) {
       <div><label className="block text-sm font-semibold text-warm mb-1.5">Summary</label><textarea data-testid="edit-summary" value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" /></div>
       <div>
         <label className="block text-sm font-semibold text-warm mb-1.5">Icon</label>
-        <div className="flex items-center gap-3">
-          <img src={icon} alt="" className="w-16 h-16 rounded-lg border border-plumborder bg-plum2 object-cover" />
-          <Field label="" data-testid="edit-icon" value={icon} onChange={(e) => setIcon(e.target.value)} placeholder="Icon image URL" />
+        <div className="flex items-center gap-4">
+          <img src={icon.startsWith("http") ? icon : `${API.replace("/api", "")}${icon}`} alt="" className="w-16 h-16 rounded-lg border border-plumborder bg-plum2 object-cover shrink-0" />
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <label className="bg-violet/15 border border-violet/40 text-lavender2 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer hover:bg-violet/25 flex items-center gap-1.5">
+                <Upload className="w-3.5 h-3.5" />
+                {uploading ? "Uploading..." : "Change Icon"}
+                <input type="file" accept="image/*" className="hidden" onChange={handleIconUpload} disabled={uploading} />
+              </label>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const defaultIcon = `https://api.dicebear.com/7.x/shapes/svg?seed=${item.slug}`;
+                  setIcon(defaultIcon);
+                  save({ icon: defaultIcon });
+                }}
+                className="bg-rose/15 border border-rose/40 text-rose py-1.5 px-3 rounded-lg text-xs font-semibold hover:bg-rose/25 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Remove Icon
+              </button>
+            </div>
+            <p className="text-[10px] text-lavender2/50 font-mono">Recommended size: 256x256. Supports PNG, JPG, WEBP.</p>
+          </div>
         </div>
       </div>
       <div>

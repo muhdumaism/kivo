@@ -1,11 +1,12 @@
 import { Navbar } from "@/components/qiveo/Navbar";
 import { Link } from "react-router-dom";
+import { Footer } from "@/pages/Home";
 
 export default function Policy() {
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen flex flex-col bg-transparent">
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+      <div className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-12 w-full">
         <h1 className="font-heading text-4xl font-black uppercase tracking-tighter text-warm mb-2">Content &amp; Trust Policy</h1>
         <p className="font-mono text-xs text-warm/50 uppercase tracking-widest mb-8">// consistent · appealable · public</p>
 
@@ -32,6 +33,7 @@ export default function Policy() {
 
         <Link to="/" className="inline-block mt-10 font-mono text-xs uppercase tracking-widest text-amber hover:underline">← Back to Qiveo</Link>
       </div>
+      <Footer />
     </div>
   );
 }

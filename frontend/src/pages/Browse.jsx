@@ -39,9 +39,9 @@ export default function Browse() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen flex flex-col bg-transparent">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full">
         <Reveal>
           <div className="flex items-center gap-3 mb-8 pb-4 border-b-2 border-[#E9D5FF]">
             <SlidersHorizontal className="w-6 h-6 text-[#E9D5FF]" />

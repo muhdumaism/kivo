@@ -33,14 +33,14 @@ export default function UploadVersionModal({ mod, onClose, onDone }) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-ink/80 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
-      <CornerFrame color="coral" className="bg-plum border border-plumborder rounded-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+      <CornerFrame color="coral" className="bg-[#15141E] border-2 border-[#E9D5FF] rounded-3xl w-full max-w-lg shadow-[8px_8px_0px_0px_rgba(20,20,20,1)] text-[#E9D5FF]" onClick={(e) => e.stopPropagation()}>
       <div className="w-full" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-plumborder">
+        <div className="flex items-center justify-between p-5 border-b-2 border-[#E9D5FF]">
           <h3 className="font-heading font-bold text-warm">Upload file · {mod.title}</h3>
           <button data-testid="close-upload-modal" onClick={onClose} className="text-lavender2/50 hover:text-rose"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-5 space-y-4">
-          <label data-testid="file-dropzone" className="block border border-dashed border-plumborder rounded-xl p-6 text-center cursor-pointer hover:border-coral transition-colors">
+          <label data-testid="file-dropzone" className="block border border-dashed border-[#E9D5FF]/40 rounded-xl p-6 text-center cursor-pointer hover:border-coral transition-colors">
             <input data-testid="version-file-input" type="file" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
             {file ? <span className="flex items-center justify-center gap-2 font-mono text-sm text-lavender2"><FileArchive className="w-4 h-4" />{file.name}</span>
               : <span className="flex items-center justify-center gap-2 font-mono text-sm text-lavender2/50"><UploadCloud className="w-5 h-5" />Drop or select .zip / .jar file</span>}
@@ -55,7 +55,7 @@ export default function UploadVersionModal({ mod, onClose, onDone }) {
             <textarea data-testid="version-changelog" value={form.changelog} onChange={set("changelog")} rows={3} className="w-full bg-ink border border-plumborder rounded-xl p-3 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" />
           </div>
         </div>
-        <div className="p-5 border-t border-plumborder">
+        <div className="p-5 border-t-2 border-[#E9D5FF]">
           <button data-testid="submit-version-btn" onClick={submit} disabled={busy} className="shine w-full bg-coral text-ink py-3 rounded-full font-bold hover:-translate-y-0.5 transition-transform disabled:opacity-50">
             {busy ? "Uploading..." : "Upload file"}
           </button>
