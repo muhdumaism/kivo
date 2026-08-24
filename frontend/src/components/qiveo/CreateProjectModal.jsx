@@ -44,53 +44,53 @@ export function CreateProjectModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] bg-ink/80 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
-      <div className="bg-plum border border-plumborder rounded-2xl w-full max-w-lg" onClick={(e) => e.stopPropagation()} data-testid="create-project-modal">
-        <div className="flex items-center justify-between p-5 border-b border-plumborder">
-          <h3 className="font-heading font-bold text-warm text-lg">Create a project</h3>
-          <button data-testid="create-close" onClick={onClose} className="text-lavender2/50 hover:text-rose"><X className="w-5 h-5" /></button>
+    <div className="fixed inset-0 z-[70] bg-[#171512]/80 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+      <div className="bg-[#24201A] border border-[#92400E] rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()} data-testid="create-project-modal">
+        <div className="flex items-center justify-between p-6 border-b border-[#92400E]/50">
+          <h3 className="font-heading font-black text-[#FFF8E1] text-xl">Create a project</h3>
+          <button data-testid="create-close" onClick={onClose} className="text-[#FFF8E1]/50 hover:text-[#FFF8E1] transition-colors bg-[#171512] rounded-full p-1.5"><X className="w-5 h-5" /></button>
         </div>
-        <div className="p-5 space-y-4">
+        <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-semibold text-warm mb-1.5">Type</label>
-            <select data-testid="cp-type" value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet">
+            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Type</label>
+            <select data-testid="cp-type" value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
               {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-warm mb-1.5">Name</label>
-            <input data-testid="cp-name" value={form.name} onChange={(e) => onName(e.target.value)} placeholder="My awesome project" className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" />
+            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Name</label>
+            <input data-testid="cp-name" value={form.name} onChange={(e) => onName(e.target.value)} placeholder="My awesome project" className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-warm mb-1.5">URL</label>
-            <div className="flex items-stretch rounded-lg border border-plumborder overflow-hidden bg-ink">
-              <span className="px-3 py-2.5 bg-plum2 text-lavender2/50 text-sm font-mono border-r border-plumborder">qiveo.app/project/</span>
-              <input data-testid="cp-slug" value={form.slug} onChange={(e) => { setSlugEdited(true); set("slug", slugify(e.target.value)); }} className="flex-1 bg-transparent px-3 py-2.5 text-warm text-sm font-mono focus:outline-none" />
+            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">URL</label>
+            <div className="flex items-stretch rounded-xl border border-[#92400E] overflow-hidden bg-[#171512] focus-within:border-[#F5C542] transition-colors">
+              <span className="px-4 py-3 bg-[#24201A] text-[#FFF8E1]/50 text-sm font-mono border-r border-[#92400E]">qiveo.app/project/</span>
+              <input data-testid="cp-slug" value={form.slug} onChange={(e) => { setSlugEdited(true); set("slug", slugify(e.target.value)); }} className="flex-1 bg-transparent px-4 py-3 text-[#FFF8E1] text-sm font-mono focus:outline-none" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-warm mb-1.5">Owner</label>
-            <select data-testid="cp-owner" value={form.owner} onChange={(e) => set("owner", e.target.value)} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet">
+            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Owner</label>
+            <select data-testid="cp-owner" value={form.owner} onChange={(e) => set("owner", e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
               <option value="self">{user?.name} (you)</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-warm mb-1.5">Visibility</label>
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-ink border border-plumborder rounded-lg">
+            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Visibility</label>
+            <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#171512] border border-[#92400E] rounded-xl">
               {VIS.map(([v, l]) => (
-                <button key={v} data-testid={`cp-vis-${v}`} onClick={() => set("visibility", v)} className={`py-2 rounded-md text-sm font-semibold transition-colors ${form.visibility === v ? "bg-coral text-ink" : "text-lavender2/70 hover:text-warm"}`}>{l}</button>
+                <button key={v} data-testid={`cp-vis-${v}`} onClick={() => set("visibility", v)} className={`py-2 rounded-lg text-sm font-bold transition-all ${form.visibility === v ? "bg-[#F5C542] text-[#171512]" : "text-[#FFF8E1]/60 hover:text-[#FFF8E1] hover:bg-[#24201A]"}`}>{l}</button>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-warm mb-1.5">Summary</label>
-            <textarea data-testid="cp-summary" value={form.summary} onChange={(e) => set("summary", e.target.value)} rows={3} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" />
-            <p className="text-xs text-lavender2/40 mt-1.5">A sentence or two that describes your project.</p>
+            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Summary</label>
+            <textarea data-testid="cp-summary" value={form.summary} onChange={(e) => set("summary", e.target.value)} rows={3} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors" />
+            <p className="text-xs text-[#FFF8E1]/40 mt-2 font-mono">A sentence or two that describes your project.</p>
           </div>
         </div>
-        <div className="flex justify-end gap-2 p-5 border-t border-plumborder">
-          <button data-testid="cp-cancel" onClick={onClose} className="px-4 py-2.5 rounded-lg text-sm font-semibold text-lavender2/80 hover:bg-plum2">Cancel</button>
-          <button data-testid="cp-create" onClick={create} disabled={busy} className="px-5 py-2.5 rounded-lg bg-coral text-ink text-sm font-bold hover:-translate-y-0.5 transition-transform disabled:opacity-50">{busy ? "Creating..." : "Create project"}</button>
+        <div className="flex justify-end gap-3 p-6 border-t border-[#92400E]/50 bg-[#171512]/30">
+          <button data-testid="cp-cancel" onClick={onClose} className="px-5 py-2.5 rounded-full text-sm font-bold text-[#FFF8E1]/60 hover:text-[#FFF8E1] hover:bg-[#24201A] transition-colors">Cancel</button>
+          <button data-testid="cp-create" onClick={create} disabled={busy} className="px-6 py-2.5 rounded-full bg-[#F5C542] text-[#171512] text-sm font-bold hover:bg-[#FFD84D] transition-colors disabled:opacity-50">{busy ? "Creating..." : "Create project"}</button>
         </div>
       </div>
     </div>

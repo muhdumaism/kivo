@@ -48,79 +48,79 @@ body {
 .font-mono { font-family: 'IBM Plex Mono', monospace; }
 .font-pixel { font-family: 'Pixelify Sans', sans-serif; }
 
-/* Retro Neobrutalism custom classes */
+/* Retro classes repurposed for modern flat UI */
 .retro-card {
     background-color: #24201A;
-    border: 2.5px solid #F5C542;
-    border-radius: 1.5rem;
-    box-shadow: 4px 4px 0px 0px #92400E;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 1px solid #92400E;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .retro-card-hover:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0px 0px #92400E;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    border-color: #F5C542;
 }
 
 .retro-btn {
     background-color: #24201A;
     color: #F5C542;
-    border: 2px solid #F5C542;
+    border: 1px solid #92400E;
     border-radius: 9999px;
-    font-weight: 750;
-    box-shadow: 3px 3px 0px 0px #92400E;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
-.retro-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 0px 0px 0px 0px #92400E;
+.retro-btn:hover {
+    background-color: #92400E;
+    color: #FFF8E1;
 }
 
 .retro-btn-black {
-    background-color: #92400E;
-    color: #000000;
-    border: 2px solid #F5C542;
+    background-color: #F5C542;
+    color: #171512;
+    border: none;
     border-radius: 9999px;
-    font-weight: 750;
-    box-shadow: 3px 3px 0px 0px #F5C542;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    font-weight: 700;
+    transition: all 0.2s ease;
 }
 
-.retro-btn-black:active {
-    transform: translate(2px, 2px);
-    box-shadow: 0px 0px 0px 0px #F5C542;
+.retro-btn-black:hover {
+    background-color: #FFD84D;
+    transform: translateY(-1px);
 }
 
 .retro-btn-dashed {
     background-color: transparent;
-    color: #F5C542;
-    border: 2px dashed #F5C542;
+    color: #FFF8E1;
+    border: 1px dashed #92400E;
     border-radius: 9999px;
     font-weight: 600;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
 }
 
 .retro-btn-dashed:hover {
-    border-style: solid;
-    background-color: rgba(20, 20, 20, 0.05);
+    background-color: #24201A;
+    border-color: #F5C542;
 }
 
 .retro-input {
     background-color: #171512;
-    color: #F5C542;
-    border: 2px solid #F5C542;
+    color: #FFF8E1;
+    border: 1px solid #92400E;
     border-radius: 9999px;
     padding: 0.75rem 1.25rem;
     outline: none;
-    transition: box-shadow 0.15s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .retro-input:focus {
-    box-shadow: 3px 3px 0px 0px #F5C542;
+    border-color: #F5C542;
+    box-shadow: 0 0 0 2px rgba(245, 197, 66, 0.2);
 }
 
-/* scanlines & grain overlays */
+/* scanlines & grain overlays (kept minimal for texture) */
 .mesh-bg {
     background-color: #171512;
 }
