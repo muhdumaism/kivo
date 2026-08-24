@@ -4,13 +4,13 @@ import api, { API, apiError } from "@/lib/api";
 import { useAuth, isStaff } from "@/context/AuthContext";
 import { useWebSocket } from "@/context/WebSocketContext";
 import { Navbar } from "@/components/qiveo/Navbar";
-import { Footer } from "@/pages/Home";
+import { Footer } from "@/components/qiveo/Footer";
 import { renderMarkdown } from "@/lib/md";
 import { fmt } from "@/components/qiveo/ModCard";
 import { toast } from "sonner";
 import {
   Download, Heart, Bookmark, Settings, Crown, Scale, CalendarDays,
-  RefreshCw, Flag, Star, Send, MessageSquare, Layers, Bell, Tag,
+  RefreshCw, Flag, Star, Send, MessageSquare, Layers, Bell, Tag, Sparkles
 } from "lucide-react";
 
 export default function ProductDetail() {
@@ -80,7 +80,7 @@ export default function ProductDetail() {
     };
   }, [slug, item, addListener]);
 
-  if (item === false) return <div className="min-h-screen bg-transparent"><Navbar /><p className="text-[#E9D5FF] p-10 font-mono font-bold">Project not found.</p><Footer /></div>;
+  if (item === false) return <div className="min-h-screen bg-transparent flex flex-col"><Navbar /><p className="text-[#E9D5FF] p-10 font-mono font-bold flex-1">Project not found.</p><Footer /></div>;
   if (!item) return <div className="min-h-screen bg-transparent"><Navbar /></div>;
 
   const owner = user && (user.id === item.author_id || isStaff(user));
@@ -114,9 +114,9 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full">
         
         {/* Header Retro Card */}
         <div className="bg-[#0A0A0C] border-2 border-[#E9D5FF] rounded-3xl p-6 flex flex-col md:flex-row gap-5 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]">
@@ -128,6 +128,7 @@ export default function ProductDetail() {
                 <span data-testid="status-pill" className="inline-flex items-center gap-1.5 border-2 border-[#E9D5FF] text-[#E9D5FF] bg-[#15141E] rounded-full px-3 py-0.5 text-xs font-heading font-extrabold uppercase"><RefreshCw className="w-3 h-3" />{item.status === "in_review" ? "Under review" : item.status.replace("_", " ")}</span>
               )}
               {item.visibility && item.visibility !== "public" && <span className="text-[10px] font-mono uppercase tracking-widest border border-[#E9D5FF] text-[#E9D5FF]/60 rounded-full px-2 py-0.5 font-bold">{item.visibility}</span>}
+              {item.contains_ai && <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-widest border border-amber text-amber rounded-full px-2 py-0.5 font-bold" title="Contains AI-generated content"><Sparkles className="w-3 h-3" /> AI Generated</span>}
             </div>
             <p className="text-[#E9D5FF]/80 mt-1.5 font-medium">{item.summary}</p>
             <div className="flex items-center gap-4 mt-3 text-sm text-[#E9D5FF]/60 font-mono font-bold">

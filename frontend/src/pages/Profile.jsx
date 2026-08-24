@@ -4,21 +4,34 @@ import api, { apiError } from "@/lib/api";
 import { Navbar } from "@/components/qiveo/Navbar";
 import { TrustBadge } from "@/components/qiveo/Badges";
 import { toast } from "sonner";
-import { ShieldCheck, KeyRound, LogOut, Save } from "lucide-react";
+import { ShieldCheck, KeyRound, LogOut, Save, Upload } from "lucide-react";
 
 export default function Profile() {
   const { user, setUser, logout } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [tfa, setTfa] = useState(!!user?.two_factor_enabled);
+  const [links, setLinks] = useState((user?.links || []).join(", "));
 
   if (!user) return null;
 
   const save = async () => {
     try {
-      const { data } = await api.put("/auth/profile", { name, bio, two_factor_enabled: tfa });
+      const { data } = await api.put("/auth/profile", { name, bio, links: links.split(",").map(l => l.trim()).filter(Boolean), two_factor_enabled: tfa });
       setUser(data);
       toast.success("[PROFILE] Saved");
+    } catch (e) { toast.error(apiError(e.response?.data?.detail)); }
+  };
+
+  const uploadAvatar = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const { data } = await api.post("/auth/avatar", form);
+      setUser({ ...user, avatar_url: data.avatar_url });
+      toast.success("Avatar updated");
     } catch (e) { toast.error(apiError(e.response?.data?.detail)); }
   };
 
@@ -27,7 +40,13 @@ export default function Profile() {
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex items-center gap-4 mb-8">
-          <img src={user.avatar_url} alt={user.name} referrerPolicy="no-referrer" className="w-20 h-20 border border-slate-light bg-slate" />
+          <div className="relative group overflow-hidden border border-slate-light bg-slate w-20 h-20">
+            <img src={user.avatar_url} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:opacity-40 transition-opacity" />
+            <label className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer bg-black/40">
+              <Upload className="w-6 h-6 text-warm" />
+              <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
+            </label>
+          </div>
           <div>
             <h1 className="font-heading text-3xl font-black uppercase tracking-tighter text-warm">{user.name}</h1>
             <p className="font-mono text-sm text-warm/50">{user.email}</p>
@@ -47,6 +66,10 @@ export default function Profile() {
           <div>
             <label className="block font-mono text-[10px] uppercase tracking-widest text-warm/50 mb-1.5">Bio</label>
             <textarea data-testid="profile-bio" value={bio} onChange={(e) => setBio(e.target.value)} rows={3} className="w-full bg-charcoal border border-slate-light p-3 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-amber" />
+          </div>
+          <div>
+            <label className="block font-mono text-[10px] uppercase tracking-widest text-warm/50 mb-1.5">External Links (comma separated)</label>
+            <input data-testid="profile-links" value={links} onChange={(e) => setLinks(e.target.value)} placeholder="https://github.com/..." className="w-full bg-charcoal border border-slate-light p-3 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-amber" />
           </div>
           <div className="flex items-center justify-between border-t border-slate-light pt-4">
             <div className="flex items-center gap-2">

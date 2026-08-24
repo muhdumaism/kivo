@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Download } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 
 function fmt(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
@@ -13,10 +13,15 @@ export function ItemCard({ item }) {
       <div className="bg-[#0A0A0C] border-2 border-[#E9D5FF] rounded-3xl p-3.5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]">
         <div className="relative overflow-hidden rounded-2xl aspect-square border-2 border-[#E9D5FF] bg-[#15141E]">
           <img src={item.icon} alt={item.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-          <div className="absolute top-2 left-2">
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
             <span className="font-mono text-[9px] uppercase tracking-wider bg-[#E9D5FF] text-[#0A0A0C] px-2.5 py-0.5 rounded-full border border-[#E9D5FF] font-bold">
               {item.rarity}
             </span>
+            {item.contains_ai && (
+              <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider bg-[#15141E] text-amber px-2.5 py-0.5 rounded-full border border-amber font-bold" title="Contains AI-generated content">
+                <Sparkles className="w-2.5 h-2.5" /> AI
+              </span>
+            )}
           </div>
           {item.staff_pick && (
             <span className="absolute top-2 right-2 font-mono text-[9px] uppercase tracking-widest bg-[#E9D5FF] text-[#0A0A0C] px-2 py-0.5 rounded-full border border-[#E9D5FF] font-bold">

@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import api, { apiError } from "@/lib/api";
 import { toast } from "sonner";
 import { fmt } from "@/components/qiveo/ModCard";
-import { Check, X, AlertTriangle, ShieldAlert, GitCompare, FileArchive } from "lucide-react";
+import { Check, X, AlertTriangle, ShieldAlert, GitCompare, FileArchive, Eye, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function ReviewQueue() {
   const [data, setData] = useState({ mods: [], versions: [] });
   const [diff, setDiff] = useState(null);
   const [reasonFor, setReasonFor] = useState(null);
+  const [viewing, setViewing] = useState(null);
 
   const load = () => api.get("/admin/queue").then((r) => setData(r.data)).catch((e) => toast.error(apiError(e.response?.data?.detail)));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -88,11 +90,12 @@ export default function ReviewQueue() {
 
       {diff && <DiffModal diff={diff} onClose={() => setDiff(null)} />}
       {reasonFor && <ReasonModal info={reasonFor} onClose={() => setReasonFor(null)} onSubmit={(reason) => moderate(reasonFor.type, reasonFor.id, reasonFor.action, reason)} />}
+      {viewing && <ProjectReviewModal slug={viewing} onClose={() => setViewing(null)} />}
     </div>
   );
 }
 
-function QueueRow({ title, sub, tag, testid, onApprove, onReject, onChanges, onQuarantine, onDiff }) {
+function QueueRow({ title, sub, tag, testid, onApprove, onReject, onChanges, onQuarantine, onDiff, onView }) {
   return (
     <div data-testid={testid} className="flex items-center gap-4 p-3 hover:bg-slate/50 flex-wrap">
       <FileArchive className="w-5 h-5 text-warm/30 shrink-0" />
@@ -102,6 +105,7 @@ function QueueRow({ title, sub, tag, testid, onApprove, onReject, onChanges, onQ
       </div>
       {tag && <span className="font-mono text-[10px] uppercase border border-slate-light text-warm/50 px-1.5 py-0.5">{tag}</span>}
       <div className="flex items-center gap-1.5">
+        {onView && <IconBtn testid={`${testid}-view`} onClick={onView} title="View full" cls="border-teal text-teal-light hover:bg-teal hover:text-charcoal"><Eye className="w-4 h-4" /></IconBtn>}
         {onDiff && <IconBtn testid={`${testid}-diff`} onClick={onDiff} title="Diff" cls="border-teal text-teal-light"><GitCompare className="w-4 h-4" /></IconBtn>}
         <IconBtn testid={`${testid}-approve`} onClick={onApprove} title="Approve" cls="border-moss text-moss hover:bg-moss hover:text-charcoal"><Check className="w-4 h-4" /></IconBtn>
         <IconBtn testid={`${testid}-changes`} onClick={onChanges} title="Request changes" cls="border-mustard text-mustard hover:bg-mustard hover:text-charcoal"><AlertTriangle className="w-4 h-4" /></IconBtn>
@@ -115,6 +119,72 @@ function QueueRow({ title, sub, tag, testid, onApprove, onReject, onChanges, onQ
 const IconBtn = ({ children, testid, onClick, title, cls }) => (
   <button data-testid={testid} onClick={onClick} title={title} className={`w-8 h-8 grid place-items-center border transition-colors ${cls}`}>{children}</button>
 );
+
+function ProjectReviewModal({ slug, onClose }) {
+  const [item, setItem] = useState(null);
+  useEffect(() => {
+    api.get(`/mods/${slug}`).then(r => setItem(r.data)).catch(e => toast.error("Failed to load project details"));
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [slug, onClose]);
+  
+  if (!item) return <div className="fixed inset-0 z-[60] bg-ink/85 grid place-items-center"><span className="text-warm/50 animate-pulse">Loading...</span></div>;
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-ink/85 backdrop-blur-sm grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-plum border border-plumborder rounded-2xl w-full max-w-4xl shadow-2xl my-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-plumborder sticky top-0 bg-plum rounded-t-2xl z-10">
+          <div className="flex items-center gap-4">
+            <img src={item.icon} alt="" className="w-12 h-12 rounded-lg bg-plum2 object-cover border border-plumborder" />
+            <div>
+              <h3 className="font-heading font-black text-warm text-xl leading-tight">{item.title}</h3>
+              <p className="font-mono text-[10px] uppercase text-lavender2/50">by {item.author_name} · {item.category}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-lavender2/50 hover:text-rose"><X className="w-6 h-6" /></button>
+        </div>
+        
+        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">Summary</p>
+              <p className="text-warm text-sm leading-relaxed">{item.summary}</p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">Description</p>
+              <div className="bg-ink border border-plumborder p-4 rounded-xl max-h-96 overflow-y-auto font-mono text-xs text-warm whitespace-pre-wrap">{item.description}</div>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">Gallery</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(item.gallery || []).map((img, i) => <img key={i} src={img} className="aspect-video object-cover rounded-lg border border-plumborder" alt="" />)}
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">Tags</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(item.tags || []).map(t => <span key={t} className="bg-plum2 border border-plumborder text-lavender2 px-2 py-0.5 rounded text-[10px] font-mono">{t}</span>)}
+              </div>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">License</p>
+              <p className="text-warm text-sm font-semibold">{item.license || "None"}</p>
+            </div>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">Monetization</p>
+              <p className="text-warm text-sm font-semibold">{item.monetization ? "Enabled" : "Disabled"}</p>
+            </div>
+            <Link to={`/item/${item.slug}`} className="inline-flex items-center gap-1.5 border border-plumborder text-lavender2 w-full justify-center py-2.5 rounded-lg text-sm font-semibold hover:border-violet/60 hover:text-warm transition-colors"><ExternalLink className="w-4 h-4" />Open project page</Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function DiffModal({ diff, onClose }) {
   const cur = diff.current, prev = diff.previous;

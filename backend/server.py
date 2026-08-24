@@ -280,7 +280,56 @@ class SQLContactSubmission(Base):
     message = Column(Text, nullable=False)
     created_at = Column(String(64), nullable=True)
 
+class SQLRolePermission(Base):
+    __tablename__ = "role_permissions"
+    id = Column(String(64), primary_key=True)
+    role = Column(String(64), unique=True, nullable=False)
+    permissions = Column(JSON, nullable=True)
+
+class SQLCategory(Base):
+    __tablename__ = "categories"
+    id = Column(String(64), primary_key=True)
+    slug = Column(String(128), unique=True, nullable=False)
+    display_name = Column(String(128), nullable=False)
+    icon = Column(Text, nullable=True)
+    applicable_project_type = Column(String(64), nullable=True)
+
+class SQLLoader(Base):
+    __tablename__ = "loaders"
+    id = Column(String(64), primary_key=True)
+    slug = Column(String(128), unique=True, nullable=False)
+    display_name = Column(String(128), nullable=False)
+    icon = Column(Text, nullable=True)
+    applicable_project_type = Column(String(64), nullable=True)
+
+class SQLPlatform(Base):
+    __tablename__ = "platforms"
+    id = Column(String(64), primary_key=True)
+    slug = Column(String(128), unique=True, nullable=False)
+    display_name = Column(String(128), nullable=False)
+    icon = Column(Text, nullable=True)
+    applicable_project_type = Column(String(64), nullable=True)
+
+class SQLProjectCategory(Base):
+    __tablename__ = "project_categories"
+    id = Column(String(64), primary_key=True)
+    project_id = Column(String(64), nullable=False)
+    category_id = Column(String(64), nullable=False)
+
+class SQLVersionLoader(Base):
+    __tablename__ = "version_loaders"
+    id = Column(String(64), primary_key=True)
+    version_id = Column(String(64), nullable=False)
+    loader_id = Column(String(64), nullable=False)
+
+class SQLVersionPlatform(Base):
+    __tablename__ = "version_platforms"
+    id = Column(String(64), primary_key=True)
+    version_id = Column(String(64), nullable=False)
+    platform_id = Column(String(64), nullable=False)
+
 # Emulation classes for MongoDB API using SQLAlchemy
+
 class SQLCollection:
     def __init__(self, model_class, session_factory):
         self.model_class = model_class
@@ -562,6 +611,13 @@ class SQLDatabase:
         self.login_attempts = SQLCollection(SQLLoginAttempt, session_factory)
         self.news = SQLCollection(SQLNews, session_factory)
         self.contact_submissions = SQLCollection(SQLContactSubmission, session_factory)
+        self.role_permissions = SQLCollection(SQLRolePermission, session_factory)
+        self.categories = SQLCollection(SQLCategory, session_factory)
+        self.loaders = SQLCollection(SQLLoader, session_factory)
+        self.platforms = SQLCollection(SQLPlatform, session_factory)
+        self.project_categories = SQLCollection(SQLProjectCategory, session_factory)
+        self.version_loaders = SQLCollection(SQLVersionLoader, session_factory)
+        self.version_platforms = SQLCollection(SQLVersionPlatform, session_factory)
 
 db = SQLDatabase(async_session)
 
@@ -1041,13 +1097,24 @@ async def me(user: dict = Depends(get_current_user)):
 
 @api.put("/auth/profile")
 async def update_profile(payload: dict, user: dict = Depends(get_current_user)):
-    updates = {k: payload[k] for k in ("name", "bio") if k in payload}
+    updates = {k: payload[k] for k in ("name", "bio", "links") if k in payload}
     if "two_factor_enabled" in payload:
         updates["two_factor_enabled"] = bool(payload["two_factor_enabled"])
     if updates:
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
     fresh = await db.users.find_one({"id": user["id"]})
     return clean_user(fresh)
+
+@api.post("/auth/avatar")
+async def upload_avatar(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    ext = file.filename.split('.')[-1]
+    fname = f"avatar_{user['id']}_{uuid.uuid4().hex[:6]}.{ext}"
+    path = UPLOAD_DIR / "gallery" / fname
+    with open(path, "wb") as f:
+        f.write(await file.read())
+    url = f"/api/uploads/gallery/{fname}"
+    await db.users.update_one({"id": user["id"]}, {"$set": {"avatar_url": url}})
+    return {"avatar_url": url}
 
 
 # ---------------------------------------------------------------------------
@@ -1210,7 +1277,7 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
     if await db.mods.find_one({"slug": slug}):
         slug = f"{slug}-{uuid.uuid4().hex[:5]}"
     trusted = user.get("trust_tier") == "verified" or user.get("verified_creator")
-    status = "approved" if trusted else "in_review"
+    status = "approved" if trusted else "draft"
     mod = {
         "id": str(uuid.uuid4()),
         "slug": slug,
@@ -1530,9 +1597,17 @@ async def toggle_staff_pick(mod_id: str, user: dict = Depends(require_staff("con
     if not mod:
         raise HTTPException(status_code=404, detail="Mod not found")
     new_val = not mod.get("staff_pick", False)
-    await db.mods.update_one({"id": mod_id}, {"$set": {"staff_pick": new_val}})
+    await db.mods.update_one({"id": mod_id}, {"$set": {"staff_pick": new_val, "featured_order": 999 if new_val else None}})
     await audit(user, "toggle_staff_pick", "mod", mod_id, after={"staff_pick": new_val})
     return {"staff_pick": new_val}
+
+@api.put("/admin/featured-order")
+async def update_featured_order(payload: dict, user: dict = Depends(require_staff("content_reviewer", "ts_moderator"))):
+    orders = payload.get("orders", []) # [{"id": "mod_id", "order": 1}]
+    for item in orders:
+        await db.mods.update_one({"id": item["id"]}, {"$set": {"featured_order": item["order"]}})
+    await audit(user, "update_featured_order", "system", "featured", after={"orders": orders})
+    return {"status": "updated"}
 
 
 @api.get("/admin/users")
@@ -1678,7 +1753,7 @@ async def edit_mod(mod_id: str, payload: dict, user: dict = Depends(get_current_
     if mod["author_id"] != user["id"] and user.get("role") not in STAFF_ROLES:
         raise HTTPException(status_code=403, detail="Not your project")
     allowed = {}
-    for k in ("summary", "description", "license", "icon", "item_type", "rarity"):
+    for k in ("summary", "description", "license", "icon", "item_type", "rarity", "contains_ai"):
         if k in payload:
             allowed[k] = payload[k]
     if "name" in payload and payload["name"].strip():
@@ -1698,6 +1773,65 @@ async def edit_mod(mod_id: str, payload: dict, user: dict = Depends(get_current_
     fresh = await db.mods.find_one({"id": mod_id}, {"_id": 0})
     return fresh
 
+
+@api.delete("/creator/mods/{mod_id}")
+async def delete_mod(mod_id: str, user: dict = Depends(get_current_user)):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if mod["author_id"] != user["id"] and user.get("role") not in STAFF_ROLES:
+        raise HTTPException(status_code=403, detail="Not allowed to delete this project")
+    
+    # 1. Delete version files
+    versions = await db.versions.find({"mod_id": mod_id}).to_list()
+    for v in versions:
+        vpath = UPLOAD_DIR / f"{v['id']}.gz"
+        if vpath.exists():
+            vpath.unlink()
+    
+    # 2. Delete gallery images
+    for g in mod.get("gallery", []):
+        fname = g.split("/")[-1]
+        gpath = UPLOAD_DIR / "gallery" / fname
+        if gpath.exists():
+            gpath.unlink()
+            
+    # 3. Delete DB records
+    await db.versions.delete_many({"mod_id": mod_id})
+    await db.reviews.delete_many({"mod_id": mod_id})
+    await db.comments.delete_many({"mod_id": mod_id})
+    await db.mods.delete_one({"id": mod_id})
+    
+    await audit(user, "delete_project", "mod", mod_id, before=mod)
+    return {"status": "deleted"}
+
+@api.post("/creator/mods/{mod_id}/submit")
+async def submit_mod(mod_id: str, user: dict = Depends(get_current_user)):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod or mod["author_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Not your project")
+    if mod["status"] != "draft":
+        raise HTTPException(status_code=400, detail="Project is not in draft status")
+        
+    versions = await db.versions.find({"mod_id": mod_id}).to_list()
+    if not versions:
+        raise HTTPException(status_code=400, detail="Must have at least 1 version uploaded")
+    if len(mod.get("summary", "")) < 20:
+        raise HTTPException(status_code=400, detail="Summary must be at least 20 characters")
+    if len(mod.get("description", "")) < 100:
+        raise HTTPException(status_code=400, detail="Description must be at least 100 characters")
+    if "api.dicebear.com" in (mod.get("icon") or ""):
+        raise HTTPException(status_code=400, detail="Must upload a custom icon")
+    if not mod.get("category"):
+        raise HTTPException(status_code=400, detail="Must select a category")
+    
+    has_loaders = any(len(v.get("mod_loaders", [])) > 0 for v in versions)
+    if not has_loaders and not mod.get("mod_loaders"):
+        raise HTTPException(status_code=400, detail="Must select at least 1 loader/platform (on a version or project)")
+            
+    await db.mods.update_one({"id": mod_id}, {"$set": {"status": "in_review", "updated_at": now_iso()}})
+    await audit(user, "submit_project", "mod", mod_id, before={"status": "draft"}, after={"status": "in_review"})
+    return {"status": "in_review"}
 
 @api.post("/creator/mods/{mod_id}/gallery")
 async def upload_gallery(mod_id: str, file: UploadFile = File(...), user: dict = Depends(get_current_user)):
@@ -1970,37 +2104,28 @@ async def seed():
             "versions": ["1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.2", "1.18.2", "1.16.5"],
         })
 
-    if await db.news.count_documents({}) == 0:
-        await db.news.insert_one({
-            "id": "news-1",
-            "title": "Qiveo Beta Launch: Redefining Voxel Catalogs",
-            "summary": "Welcome to the new era of community-driven creator catalogs. Qiveo brings secure, verified, and high-performance voxel creations directly to you.",
-            "content": "We are thrilled to officially launch the beta version of Qiveo. Designed with creators in mind, Qiveo replaces bloated, ad-ridden repositories with a clean, neobrutalist marketplace where every upload is human-reviewed to prevent malware and copyright infringement. Connect your Google or Discord account, download verified drops, and start exploring today!",
-            "category": "Announcements",
-            "author": "Qiveo Team",
-            "read_time": "3 min read",
-            "created_at": now_iso()
-        })
-        await db.news.insert_one({
-            "id": "news-2",
-            "title": "Why Human Reviewing Matters: A Note From the Founders",
-            "summary": "In a world of automated scrapers and malicious code, Qiveo stands for trust, security, and manual verification.",
-            "content": "Automated scanning can catch simple malware, but it misses advanced exfiltration scripts, ripped commercial assets, and copycat uploads. At Qiveo, our dedicated staff manually inspects every submission. This walkthrough of our vetting guidelines highlights our commitment to maintaining a spam-free index.",
-            "category": "Policy",
-            "author": "Muhdu Maism",
-            "read_time": "5 min read",
-            "created_at": now_iso()
-        })
-        await db.news.insert_one({
-            "id": "news-3",
-            "title": "Creator Studio Tools v1.2: Real-time Analytics Released",
-            "summary": "Analyze downloads, track subscriber growth, and monitor user feedback directly from your creator dashboard.",
-            "content": "The latest Creator Dashboard update introduces rich graphical analytics powered by Recharts. Track your top creations, monitor feedback instantly, and see where your audience is coming from. Start uploading versions to access your creator analytics panel today.",
-            "category": "Updates",
-            "author": "Qiveo Devs",
-            "read_time": "4 min read",
-            "created_at": now_iso()
-        })
+    if await db.categories.count_documents({}) == 0:
+        for c in [
+            {"id": "cat-utility", "slug": "utility", "display_name": "Utility", "icon": "", "applicable_project_type": "Mod"},
+            {"id": "cat-combat", "slug": "combat", "display_name": "Combat", "icon": "", "applicable_project_type": "Mod"},
+            {"id": "cat-magic", "slug": "magic", "display_name": "Magic", "icon": "", "applicable_project_type": "Mod"},
+            {"id": "cat-tech", "slug": "tech", "display_name": "Tech", "icon": "", "applicable_project_type": "Mod"}
+        ]: await db.categories.insert_one(c)
+        
+    if await db.loaders.count_documents({}) == 0:
+        for l in [
+            {"id": "load-fabric", "slug": "fabric", "display_name": "Fabric", "icon": "", "applicable_project_type": "Mod"},
+            {"id": "load-forge", "slug": "forge", "display_name": "Forge", "icon": "", "applicable_project_type": "Mod"},
+            {"id": "load-neoforge", "slug": "neoforge", "display_name": "NeoForge", "icon": "", "applicable_project_type": "Mod"},
+            {"id": "load-quilt", "slug": "quilt", "display_name": "Quilt", "icon": "", "applicable_project_type": "Mod"}
+        ]: await db.loaders.insert_one(l)
+        
+    if await db.platforms.count_documents({}) == 0:
+        for p in [
+            {"id": "plat-spigot", "slug": "spigot", "display_name": "Spigot", "icon": "", "applicable_project_type": "Plugin"},
+            {"id": "plat-paper", "slug": "paper", "display_name": "Paper", "icon": "", "applicable_project_type": "Plugin"}
+        ]: await db.platforms.insert_one(p)
+
 
     if os.environ.get("PRODUCTION") == "true":
         return

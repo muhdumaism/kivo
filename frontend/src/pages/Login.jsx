@@ -5,7 +5,7 @@ import { apiError } from "@/lib/api";
 import { Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ShaderBackground } from "@/components/qiveo/ShaderBackground";
-import { Footer } from "@/pages/Home";
+import { Footer } from "@/components/qiveo/Footer";
 
 export default function Login() {
   const [params] = useSearchParams();

@@ -7,11 +7,11 @@ import UploadVersionModal from "@/components/qiveo/UploadVersionModal";
 import { toast } from "sonner";
 import {
   ArrowLeft, Settings, ShieldQuestion, Tags, FileText, GitBranch, Scale, Images, Link2,
-  Users, BarChart3, Upload, Trash2, ExternalLink,
+  Users, BarChart3, Upload, Trash2, ExternalLink, ClipboardCheck, Check, X
 } from "lucide-react";
 
 const NAV = [
-  ["general", "General", Settings], ["disclosures", "Disclosures", ShieldQuestion], ["tags", "Tags", Tags],
+  ["general", "General", Settings], ["submit", "Submit for Review", ClipboardCheck], ["disclosures", "Disclosures", ShieldQuestion], ["tags", "Tags", Tags],
   ["description", "Description", FileText], ["versions", "Versions", GitBranch], ["license", "License", Scale],
   ["gallery", "Gallery", Images], ["links", "Links", Link2], ["members", "Members", Users], ["analytics", "Analytics", BarChart3],
 ];
@@ -67,6 +67,7 @@ export default function ProjectEdit() {
             {section === "versions" && <VersionsSec item={item} onUpload={() => setUploadOpen(true)} />}
             {section === "license" && <LicenseSec item={item} save={save} />}
             {section === "tags" && <TagsSec item={item} save={save} />}
+            {section === "submit" && <SubmitSec item={item} onDone={load} />}
             {["disclosures", "links", "members", "analytics"].includes(section) && (
               <div className="text-center py-16 text-lavender2/40 font-mono">
                 {section === "analytics" ? <Link to="/creator" className="text-coral2 underline">Open analytics dashboard →</Link> : `${section} — coming soon`}
@@ -90,8 +91,23 @@ function General({ item, save }) {
   const [visibility, setVisibility] = useState(item.visibility || "public");
   const [icon, setIcon] = useState(item.icon);
   const [mon, setMon] = useState(!!item.monetization);
+  const [delOpen, setDelOpen] = useState(false);
+  const [delConfirm, setDelConfirm] = useState("");
+  const nav = useNavigate();
+
+  const handleDelete = async () => {
+    if (delConfirm !== item.slug && delConfirm !== item.title) return;
+    try {
+      await api.delete(`/creator/mods/${item.id}`);
+      toast.success("Project deleted");
+      nav("/creator");
+    } catch (e) {
+      toast.error(apiError(e.response?.data?.detail));
+    }
+  };
+
   return (
-    <div className="space-y-5 max-w-xl">
+    <div className="space-y-5 max-w-xl relative">
       <h2 className="font-heading font-bold text-warm text-lg">Project information</h2>
       <Field label="Name" data-testid="edit-name" value={name} onChange={(e) => setName(e.target.value)} />
       <div>
@@ -115,11 +131,33 @@ function General({ item, save }) {
       {/* Danger zone */}
       <div className="pt-6 mt-6 border-t border-rose/30">
         <h3 className="font-heading font-bold text-rose flex items-center gap-2">Danger zone</h3>
-        <div className="flex items-center justify-between bg-ink border border-plumborder rounded-xl p-4 mt-3">
-          <div><p className="text-warm font-semibold text-sm">Monetization</p><p className="text-lavender2/50 text-xs">Earn from downloads. (UI preview — payments not enabled)</p></div>
-          <button data-testid="mon-toggle" onClick={() => { setMon(!mon); save({ monetization: !mon }); }} className={`w-12 h-6 rounded-full border transition-colors ${mon ? "bg-mint border-mint" : "bg-plum2 border-plumborder"}`}><div className={`w-4 h-4 rounded-full bg-warm transition-transform ${mon ? "translate-x-6" : "translate-x-1"}`} /></button>
+        <div className="flex flex-col gap-3 mt-3">
+          <div className="flex items-center justify-between bg-ink border border-plumborder rounded-xl p-4">
+            <div><p className="text-warm font-semibold text-sm">Monetization</p><p className="text-lavender2/50 text-xs">Earn from downloads. (UI preview — payments not enabled)</p></div>
+            <button data-testid="mon-toggle" onClick={() => { setMon(!mon); save({ monetization: !mon }); }} className={`w-12 h-6 rounded-full border transition-colors ${mon ? "bg-mint border-mint" : "bg-plum2 border-plumborder"}`}><div className={`w-4 h-4 rounded-full bg-warm transition-transform ${mon ? "translate-x-6" : "translate-x-1"}`} /></button>
+          </div>
+          
+          <div className="flex items-center justify-between bg-ink border border-rose/30 rounded-xl p-4">
+            <div><p className="text-warm font-semibold text-sm">Delete Project</p><p className="text-lavender2/50 text-xs">Permanently delete this project and all files.</p></div>
+            <button onClick={() => setDelOpen(true)} className="bg-rose/10 text-rose border border-rose/30 hover:bg-rose/20 px-4 py-2 rounded-lg text-sm font-bold transition-colors">Delete</button>
+          </div>
         </div>
       </div>
+
+      {delOpen && (
+        <div className="fixed inset-0 bg-ink/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-plum border border-rose/50 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+            <h2 className="font-heading text-xl font-bold text-rose mb-2">Delete Project?</h2>
+            <p className="text-sm text-lavender2/80 mb-4">This action is irreversible. It will permanently delete this project, all uploaded versions, gallery images, stats, and comments.</p>
+            <p className="text-sm text-warm mb-3">Type <strong className="font-mono bg-ink px-1.5 py-0.5 rounded text-coral2">{item.slug}</strong> to confirm.</p>
+            <input value={delConfirm} onChange={(e) => setDelConfirm(e.target.value)} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm font-mono focus:outline-none focus:border-rose focus:ring-1 focus:ring-rose mb-5" placeholder={item.slug} />
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setDelOpen(false)} className="px-4 py-2 rounded-lg text-sm font-semibold text-lavender2 hover:text-warm">Cancel</button>
+              <button onClick={handleDelete} disabled={delConfirm !== item.slug} className="bg-rose text-white px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed">Delete Forever</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -185,6 +223,87 @@ function TagsSec({ item, save }) {
       <h2 className="font-heading font-bold text-warm text-lg">Tags</h2>
       <Field label="Tags (comma separated)" data-testid="edit-tags" value={tags} onChange={(e) => setTags(e.target.value)} />
       <button data-testid="edit-tags-save" onClick={() => save({ tags: tags.split(",").map((t) => t.trim()).filter(Boolean) })} className="bg-coral text-ink px-5 py-2.5 rounded-lg font-bold">Save</button>
+    </div>
+  );
+}
+
+function SubmitSec({ item, onDone }) {
+  const versions = item.versions || [];
+  const hasVersions = versions.length > 0;
+  const hasSummary = (item.summary || "").length >= 20;
+  const hasDesc = (item.description || "").length >= 100;
+  const hasIcon = item.icon && !item.icon.includes("api.dicebear.com");
+  const hasCategory = !!item.category;
+  const hasLoaders = (item.mod_loaders || []).length > 0 || versions.some(v => (v.mod_loaders || []).length > 0);
+  
+  const allGood = hasVersions && hasSummary && hasDesc && hasIcon && hasCategory && hasLoaders;
+  const [loading, setLoading] = useState(false);
+  const [containsAi, setContainsAi] = useState(!!item.contains_ai);
+
+  const submit = async () => {
+    if (!allGood) return;
+    setLoading(true);
+    try {
+      await api.put(`/creator/mods/${item.id}`, { contains_ai: containsAi });
+      await api.post(`/creator/mods/${item.id}/submit`);
+      toast.success("Submitted for review!");
+      onDone();
+    } catch (e) {
+      toast.error(apiError(e.response?.data?.detail));
+    }
+    setLoading(false);
+  };
+
+  if (item.status !== "draft") {
+    return (
+      <div className="text-center py-16">
+        <h2 className="font-heading font-bold text-warm text-2xl mb-2">Project is {item.status.replace("_", " ")}</h2>
+        <p className="text-lavender2/60">This project has already been submitted.</p>
+      </div>
+    );
+  }
+
+  const Req = ({ ok, text }) => (
+    <div className={`flex items-center gap-3 p-3 rounded-lg border ${ok ? "bg-moss/10 border-moss/30 text-moss" : "bg-ink border-plumborder text-warm"}`}>
+      {ok ? <Check className="w-5 h-5" /> : <X className="w-5 h-5 text-rust" />}
+      <span className="text-sm font-semibold">{text}</span>
+    </div>
+  );
+
+  return (
+    <div className="max-w-xl space-y-6">
+      <h2 className="font-heading font-bold text-warm text-lg">Pre-Submission Checklist</h2>
+      <p className="text-sm text-lavender2/80">Complete all requirements before submitting your project for review.</p>
+      <div className="space-y-3">
+        <Req ok={hasVersions} text="Upload at least 1 version file" />
+        <Req ok={hasSummary} text="Summary is at least 20 characters" />
+        <Req ok={hasDesc} text="Description is at least 100 characters" />
+        <Req ok={hasIcon} text="Upload a custom project icon" />
+        <Req ok={hasCategory} text="Select a category" />
+        <Req ok={hasLoaders} text="Select at least 1 mod loader or platform" />
+      </div>
+
+      <div className="bg-ink border border-plumborder rounded-lg p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input 
+            type="checkbox" 
+            checked={containsAi} 
+            onChange={(e) => setContainsAi(e.target.checked)} 
+            className="mt-1 w-4 h-4 rounded border-plumborder text-coral focus:ring-coral bg-transparent"
+          />
+          <div>
+            <p className="text-sm font-bold text-warm">Contains AI-Generated Content</p>
+            <p className="text-xs text-lavender2/60 mt-0.5">Check this if your project includes code, assets, or descriptions generated by AI tools.</p>
+          </div>
+        </label>
+      </div>
+      <button 
+        disabled={!allGood || loading} 
+        onClick={submit} 
+        className="w-full bg-coral text-ink py-3 rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-0.5 transition-transform"
+      >
+        Submit for Review
+      </button>
     </div>
   );
 }

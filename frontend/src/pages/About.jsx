@@ -1,13 +1,13 @@
 import { Navbar } from "@/components/qiveo/Navbar";
-import { Footer } from "@/pages/Home";
+import { Footer } from "@/components/qiveo/Footer";
 import { Compass, Users, CheckCircle, ShieldCheck } from "lucide-react";
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-transparent text-[#E9D5FF]">
+    <div className="min-h-screen bg-transparent text-[#E9D5FF] flex flex-col">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+      <div className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 py-12 w-full">
         {/* Header */}
         <div className="border-b-2 border-[#E9D5FF] pb-6 mb-12">
           <span className="font-mono text-xs uppercase tracking-[0.3em] text-[#8B5CF6] font-bold">// platform manifest</span>

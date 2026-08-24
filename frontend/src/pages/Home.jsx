@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "@/lib/api";
 import { Navbar } from "@/components/qiveo/Navbar";
+import { Footer } from "@/components/qiveo/Footer";
 import { Reveal } from "@/components/qiveo/Reveal";
 import { Search, ArrowRight, Download } from "lucide-react";
 import { toast } from "sonner";
@@ -58,10 +59,10 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-transparent">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-10 w-full">
         
         {/* Title row */}
         <Reveal>
@@ -158,7 +159,7 @@ function PitchUsCard() {
         <div className="border-2 border-[#E9D5FF] rounded-3xl overflow-hidden bg-[#15141E] aspect-square flex flex-col items-center justify-center p-6 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
           <div className="w-16 h-16 border-2 border-dashed border-[#E9D5FF]/40 rounded-full flex items-center justify-center text-3xl font-extrabold">+</div>
         </div>
-        
+
         <div className="mt-3.5 flex items-start justify-between gap-2">
           <div>
             <h3 className="font-heading font-extrabold text-lg leading-tight group-hover:underline">Your game here!</h3>
@@ -166,78 +167,12 @@ function PitchUsCard() {
               BY YOUR STUDIO
             </span>
           </div>
-          
+
           <span className="bg-[#E9D5FF] text-[#0A0A0C] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#E9D5FF]">
             PITCH US
           </span>
         </div>
       </div>
     </div>
-  );
-}
-
-export function Footer() {
-  const [email, setEmail] = useState("");
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email) return;
-    toast.success(`Subscribed ${email} to our newsletter!`);
-    setEmail("");
-  };
-  
-  return (
-    <footer className="bg-[#050507] text-[#E9D5FF] border-t-2 border-[#E9D5FF] mt-16 pt-16 pb-12 rounded-t-[2.5rem]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-12 border-b border-[#E9D5FF]/10">
-          <div className="md:col-span-2">
-            <span className="font-heading font-black text-5xl tracking-tighter text-[#E9D5FF] block uppercase">QIVEO</span>
-            <p className="text-[#E9D5FF]/70 text-sm mt-4 max-w-sm font-medium leading-relaxed">
-              Qiveo is a developer-friendly marketplace of indie games, skins, mods, and blocky collectibles. Every drop is human-reviewed.
-            </p>
-          </div>
-          <div>
-            <h4 className="font-heading font-extrabold text-sm uppercase tracking-wider text-[#E9D5FF] mb-4">Navigation</h4>
-            <div className="flex flex-col gap-2.5 text-sm text-[#E9D5FF]/70 font-semibold">
-              <Link to="/browse" className="hover:text-[#8B5CF6]">Games</Link>
-              <Link to="/news" className="hover:text-[#8B5CF6]">News</Link>
-              <Link to="/about" className="hover:text-[#8B5CF6]">About</Link>
-            </div>
-          </div>
-          <div>
-            <h4 className="font-heading font-extrabold text-sm uppercase tracking-wider text-[#E9D5FF] mb-4">Contact</h4>
-            <div className="flex flex-col gap-2.5 text-sm text-[#E9D5FF]/70 font-semibold">
-              <Link to="/pitch" className="hover:text-[#8B5CF6]">Pitch Us</Link>
-              <Link to="/policy" className="hover:text-[#8B5CF6]">Trust Policy</Link>
-              <Link to="/policy" className="hover:text-[#8B5CF6]">DMCA Info</Link>
-              <Link to="/policy" className="hover:text-[#8B5CF6]">Privacy Policy</Link>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-10">
-          <form onSubmit={handleSubscribe} className="relative w-full max-w-md bg-[#0A0A0C] border-2 border-[#E9D5FF] rounded-full p-1 flex items-center shadow-[3px_3px_0px_0px_rgba(139,92,246,0.3)]">
-            <input 
-              type="email" 
-              placeholder="Join our spam-free, low-volume newsletter" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-transparent text-[#E9D5FF] placeholder:text-[#E9D5FF]/50 text-xs px-4 py-2 flex-1 outline-none border-0 focus:ring-0"
-            />
-            <button type="submit" className="bg-[#E9D5FF] text-[#0A0A0C] text-xs font-heading font-extrabold px-5 py-2.5 rounded-full hover:bg-neutral-800 transition-colors">
-              Subscribe
-            </button>
-          </form>
-          
-          <div className="flex flex-col sm:flex-row items-center gap-4 text-xs text-[#E9D5FF]/50 font-mono">
-            <span>© 2026 QIVEO GAMES INC.</span>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-[#8B5CF6]">TWITTER</a>
-              <a href="#" className="hover:text-[#8B5CF6]">DISCORD</a>
-              <a href="#" className="hover:text-[#8B5CF6]">GITHUB</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
   );
 }

@@ -37,7 +37,6 @@ export function Navbar() {
             <Link to="/browse" className="text-sm font-heading font-extrabold text-[#E9D5FF] hover:underline">Games</Link>
             <Link to="/news" className="text-sm font-heading font-extrabold text-[#E9D5FF] hover:underline">News</Link>
             <Link to="/about" className="text-sm font-heading font-extrabold text-[#E9D5FF] hover:underline">About</Link>
-            <Link to="/pitch" className="text-sm font-heading font-extrabold text-[#E9D5FF] hover:underline">Pitch Us</Link>
             <Link to="/contact" className="text-sm font-heading font-extrabold text-[#E9D5FF] hover:underline">Contact</Link>
           </nav>
 
