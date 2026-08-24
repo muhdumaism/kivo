@@ -4,6 +4,8 @@ import api from "@/lib/api";
 import { Navbar } from "@/components/qiveo/Navbar";
 import { Footer } from "@/components/qiveo/Footer";
 import { Reveal } from "@/components/qiveo/Reveal";
+import { FeaturesSection } from "@/components/qiveo/FeaturesSection";
+import { FAQSection } from "@/components/qiveo/FAQSection";
 import { Search, ArrowRight, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useWebSocket } from "@/context/WebSocketContext";
@@ -117,6 +119,9 @@ export default function Home() {
           </Reveal>
         </div>
       </main>
+
+      <FeaturesSection />
+      <FAQSection />
 
       <Footer />
     </div>

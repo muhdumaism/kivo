@@ -3,14 +3,6 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 export function Footer() {
-  const [email, setEmail] = useState("");
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email) return;
-    toast.success(`Subscribed ${email} to our newsletter!`);
-    setEmail("");
-  };
 
   return (
     <footer className="mt-auto bg-[#050507] text-[#FFF8E1] border-t-2 border-[#92400E] pt-8 pb-6 rounded-t-3xl">
@@ -44,21 +36,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-8">
-          <form onSubmit={handleSubscribe} className="relative w-full max-w-md bg-[#171512] border-2 border-[#92400E] rounded-full p-1 flex items-center shadow-[3px_3px_0px_0px_rgba(139,92,246,0.3)]">
-            <input
-              type="email"
-              placeholder="Join our spam-free, low-volume newsletter"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-transparent text-[#FFF8E1] placeholder:text-[#FFF8E1]/50 text-xs px-4 py-2 flex-1 outline-none border-0 focus:ring-0"
-            />
-            <button type="submit" className="bg-[#F5C542] text-[#171512] text-xs font-heading font-extrabold px-5 py-2.5 rounded-full hover:bg-neutral-200 transition-colors">
-              Subscribe
-            </button>
-          </form>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 text-xs text-[#FFF8E1]/50 font-mono">
+        <div className="flex flex-col items-center justify-center gap-6 pt-8">          <div className="flex flex-col sm:flex-row items-center gap-4 text-xs text-[#FFF8E1]/50 font-mono">
             <span>© 2026 QIVEO GAMES INC.</span>
             <div className="flex gap-4">
               <a href="#" className="hover:text-[#92400E] transition-colors">TWITTER</a>
