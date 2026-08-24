@@ -9,10 +9,22 @@ import { ArrowRight, ArrowLeft, Check, Lock } from "lucide-react";
 const STEPS = ["Basics", "Details", "Tags & Compat", "Publish"];
 const LICENSES = ["MIT", "Apache-2.0", "GPL-3.0", "CC-BY-4.0", "All Rights Reserved"];
 const GAMES = {
-  minecraft: ["Plugins", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"],
+  minecraft: ["Plugins", "Mods", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"],
   roblox: ["Game setups", "Maps", "Scripts", "Vehicles", "Weapons", "Models", "Clothing", "Graphics & UI", "Animations & VFX", "Audio"],
   hytale: ["Plugins", "Data assets", "Server setups", "Builds", "Graphics", "Textures", "Models", "Audio", "Other"],
   discord: ["Bots", "Graphics", "Other"]
+};
+const VERSIONS = {
+  minecraft: ["26.2", "26.1", "1.21.4", "1.21.1", "1.20.4", "1.20.1", "1.19.2", "1.18.2", "1.16.5"],
+  roblox: ["Latest"],
+  hytale: ["Latest"],
+  discord: ["v14", "v13"]
+};
+const LOADERS = {
+  "Plugins": ["Paper", "Spigot", "Purpur", "Velocity", "BungeeCord", "Folia", "Waterdog"],
+  "Mods": ["Fabric", "Forge", "NeoForge", "Quilt"],
+  "Server setups": ["Paper", "Purpur", "Velocity"],
+  "Skripts": ["Skript 2.9", "Skript 2.8"]
 };
 
 export default function NewMod() {
@@ -98,9 +110,9 @@ export default function NewMod() {
           {step === 2 && (
             <div className="space-y-5">
               <Field label="Tags (comma separated)" testid="wizard-tags" value={form.tagsRaw} onChange={(e) => set("tagsRaw", e.target.value)} placeholder="hero, armor, rpg" />
-              <Select label="Rarity" testid="wizard-rarity" value={form.rarity} onChange={(e) => set("rarity", e.target.value)} options={game?.rarities || ["Common"]} />
-              <Chips label="Mod loaders (if applicable)" testid="wizard-loader" options={game?.mod_loaders || []} active={form.loaders} onToggle={(v) => toggle("loaders", v)} />
-              <Chips label="Game versions" testid="wizard-version" options={game?.versions || []} active={form.versions} onToggle={(v) => toggle("versions", v)} mono />
+              <Select label="Rarity" testid="wizard-rarity" value={form.rarity} onChange={(e) => set("rarity", e.target.value)} options={["Common", "Uncommon", "Rare", "Epic", "Legendary"]} />
+              <Chips label="Software / Loaders (if applicable)" testid="wizard-loader" options={LOADERS[form.item_type] || []} active={form.loaders} onToggle={(v) => toggle("loaders", v)} />
+              <Chips label="Game versions" testid="wizard-version" options={VERSIONS[form.game_slug] || []} active={form.versions} onToggle={(v) => toggle("versions", v)} mono />
             </div>
           )}
           {step === 3 && (
