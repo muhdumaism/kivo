@@ -1,0 +1,3 @@
+@echo off
+echo Starting portable database on port 3306...
+"c:\Users\muhdu\Downloads\kivo-main\kivo-main\backend\mariadb\extracted\mariadb-11.4.2-winx64\bin\mariadbd.exe" --datadir="c:\Users\muhdu\Downloads\kivo-main\kivo-main\backend\mariadb\extracted\mariadb-11.4.2-winx64\data" --port=3306 --console

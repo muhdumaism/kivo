@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    --background: 53 32% 85%;
+    --foreground: 0 0% 8%;
+    --card: 53 32% 85%;
+    --card-foreground: 0 0% 8%;
+    --popover: 53 32% 85%;
+    --popover-foreground: 0 0% 8%;
+    --primary: 0 0% 8%;
+    --primary-foreground: 53 32% 85%;
+    --secondary: 53 20% 75%;
+    --secondary-foreground: 0 0% 8%;
+    --muted: 53 10% 80%;
+    --muted-foreground: 0 0% 30%;
+    --accent: 0 0% 8%;
+    --accent-foreground: 53 32% 85%;
+    --destructive: 347 80% 50%;
+    --destructive-foreground: 53 32% 95%;
+    --border: 0 0% 8%;
+    --input: 0 0% 8%;
+    --ring: 0 0% 8%;
+    --radius: 1.5rem;
+}
+
+* { border-color: hsl(var(--border)); }
+
+body {
+    margin: 0;
+    background-color: #0A0A0C;
+    color: #E9D5FF;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+::selection { background: #E9D5FF; color: #0A0A0C; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0A0A0C; }
+::-webkit-scrollbar-thumb { background: #E9D5FF; border-radius: 6px; border: 2px solid #0A0A0C; }
+::-webkit-scrollbar-thumb:hover { background: #333333; }
+
+.font-heading { font-family: 'Sora', sans-serif; }
+.font-mono { font-family: 'IBM Plex Mono', monospace; }
+.font-pixel { font-family: 'Pixelify Sans', sans-serif; }
+
+/* Retro Neobrutalism custom classes */
+.retro-card {
+    background-color: #15141E;
+    border: 2.5px solid #E9D5FF;
+    border-radius: 1.5rem;
+    box-shadow: 4px 4px 0px 0px #8B5CF6;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.retro-card-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px 0px #8B5CF6;
+}
+
+.retro-btn {
+    background-color: #15141E;
+    color: #E9D5FF;
+    border: 2px solid #E9D5FF;
+    border-radius: 9999px;
+    font-weight: 750;
+    box-shadow: 3px 3px 0px 0px #8B5CF6;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.retro-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px #8B5CF6;
+}
+
+.retro-btn-black {
+    background-color: #8B5CF6;
+    color: #000000;
+    border: 2px solid #E9D5FF;
+    border-radius: 9999px;
+    font-weight: 750;
+    box-shadow: 3px 3px 0px 0px #E9D5FF;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.retro-btn-black:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px 0px #E9D5FF;
+}
+
+.retro-btn-dashed {
+    background-color: transparent;
+    color: #E9D5FF;
+    border: 2px dashed #E9D5FF;
+    border-radius: 9999px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.retro-btn-dashed:hover {
+    border-style: solid;
+    background-color: rgba(20, 20, 20, 0.05);
+}
+
+.retro-input {
+    background-color: #0A0A0C;
+    color: #E9D5FF;
+    border: 2px solid #E9D5FF;
+    border-radius: 9999px;
+    padding: 0.75rem 1.25rem;
+    outline: none;
+    transition: box-shadow 0.15s ease;
+}
+
+.retro-input:focus {
+    box-shadow: 3px 3px 0px 0px #E9D5FF;
+}
+
+/* scanlines & grain overlays */
+.mesh-bg {
+    background-color: #0A0A0C;
+}
+
+.grain::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.035; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* outlined watermark text */
+.text-stroke {
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(20,20,20,0.08);
+}
+
+/* scroll reveal */
+.reveal { opacity: 0; transform: translateY(15px); }
+.reveal.in { opacity: 1; transform: translateY(0); transition: opacity 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; }
+}
+
+/* Parallax Scrolling Section */
+.parallax {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background-color: #0A0A0C;
+}
+
+.parallax__header {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.parallax__visuals {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.parallax__black-line-overflow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #E9D5FF;
+  z-index: 10;
+}
+
+.parallax__layers {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.parallax__layer-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  filter: grayscale(1) brightness(0.55) sepia(1) hue-rotate(225deg) saturate(2.5) contrast(1.15);
+}
+
+.parallax__layer-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.parallax__title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 900;
+  font-size: 8vw;
+  text-transform: uppercase;
+  color: #E9D5FF;
+  text-shadow: 4px 4px 0px #8B5CF6;
+  letter-spacing: -0.05em;
+  margin: 0;
+}
+
+.parallax__fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30vh;
+  background: linear-gradient(to top, #0A0A0C, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.parallax__content {
+  position: relative;
+  width: 100%;
+  min-height: 50vh;
+  background-color: #0A0A0C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  z-index: 6;
+  border-top: 2px solid #E9D5FF;
+}
+
+.osmo-icon-svg {
+  width: 80px;
+  height: 80px;
+  color: #8B5CF6;
+}
+
