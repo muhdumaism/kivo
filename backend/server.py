@@ -18,7 +18,6 @@ from typing import List, Optional, Literal
 import jwt
 import bcrypt
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse, FileResponse, RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, select, update, delete, func, or_, and_, desc, asc, Column, String, Boolean, Integer, Float, Text, JSON
@@ -1126,7 +1125,7 @@ async def upload_avatar(file: UploadFile = File(...), user: dict = Depends(get_c
     path = UPLOAD_DIR / "gallery" / fname
     with open(path, "wb") as f:
         f.write(await file.read())
-    url = f"/api/uploads/gallery/{fname}"
+    url = f"/api/gallery/{fname}"
     await db.users.update_one({"id": user["id"]}, {"$set": {"avatar_url": url}})
     
     await db.reviews.update_many({"user_id": user["id"]}, {"$set": {"user_avatar": url}})
@@ -2361,7 +2360,6 @@ async def on_startup():
 
 
 app.include_router(api)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,

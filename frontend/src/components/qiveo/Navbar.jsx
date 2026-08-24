@@ -35,7 +35,7 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden lg:flex items-center justify-center gap-6 flex-1 max-w-xl mx-auto">
-            <Link to="/browse" className="text-sm font-heading font-extrabold text-[#FFF8E1] hover:underline">Games</Link>
+            <Link to="/browse" className="text-sm font-heading font-extrabold text-[#FFF8E1] hover:underline">Browse</Link>
             <Link to="/news" className="text-sm font-heading font-extrabold text-[#FFF8E1] hover:underline">News</Link>
             <Link to="/about" className="text-sm font-heading font-extrabold text-[#FFF8E1] hover:underline">About</Link>
             <Link to="/contact" className="text-sm font-heading font-extrabold text-[#FFF8E1] hover:underline">Contact</Link>

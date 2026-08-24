@@ -8,6 +8,12 @@ import { ArrowRight, ArrowLeft, Check, Lock } from "lucide-react";
 
 const STEPS = ["Basics", "Details", "Tags & Compat", "Publish"];
 const LICENSES = ["MIT", "Apache-2.0", "GPL-3.0", "CC-BY-4.0", "All Rights Reserved"];
+const GAMES = {
+  minecraft: ["Plugins", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"],
+  roblox: ["Game setups", "Maps", "Scripts", "Vehicles", "Weapons", "Models", "Clothing", "Graphics & UI", "Animations & VFX", "Audio"],
+  hytale: ["Plugins", "Data assets", "Server setups", "Builds", "Graphics", "Textures", "Models", "Audio", "Other"],
+  discord: ["Bots", "Graphics", "Other"]
+};
 
 export default function NewMod() {
   const nav = useNavigate();
@@ -15,7 +21,7 @@ export default function NewMod() {
   const [game, setGame] = useState(null);
   const [form, setForm] = useState({
     title: "", summary: "", description: "", game_slug: "minecraft",
-    item_type: "Skin", rarity: "Common", license: "MIT", pricing: "free",
+    item_type: "Plugins", rarity: "Common", license: "MIT", pricing: "free",
     tagsRaw: "", loaders: [], versions: [],
   });
 
@@ -27,7 +33,7 @@ export default function NewMod() {
     try {
       const { data } = await api.post("/creator/mods", {
         title: form.title, summary: form.summary, description: form.description,
-        game_slug: "minecraft", item_type: form.item_type, rarity: form.rarity, category: form.item_type,
+        game_slug: form.game_slug, item_type: form.item_type, rarity: form.rarity, category: form.item_type,
         license: form.license, tags: form.tagsRaw.split(",").map((t) => t.trim()).filter(Boolean),
         mod_loaders: form.loaders, game_versions: form.versions,
       });
@@ -63,7 +69,10 @@ export default function NewMod() {
             <div className="space-y-4">
               <Field label="Drop name" testid="wizard-title" value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Aether Knight" />
               <Field label="Short summary" testid="wizard-summary" value={form.summary} onChange={(e) => set("summary", e.target.value)} placeholder="A legendary armored hero skin" />
-              <Select label="Type" testid="wizard-type" value={form.item_type} onChange={(e) => set("item_type", e.target.value)} options={game?.item_types || ["Skin"]} />
+              <div className="grid grid-cols-2 gap-4">
+                <Select label="Game / Platform" testid="wizard-game" value={form.game_slug} onChange={(e) => { set("game_slug", e.target.value); set("item_type", GAMES[e.target.value][0]); }} options={Object.keys(GAMES)} />
+                <Select label="Category" testid="wizard-type" value={form.item_type} onChange={(e) => set("item_type", e.target.value)} options={GAMES[form.game_slug] || []} />
+              </div>
             </div>
           )}
           {step === 1 && (
@@ -98,7 +107,8 @@ export default function NewMod() {
             <div className="space-y-3">
               <p className="font-mono text-xs uppercase tracking-widest text-lavender2/50 mb-4">Review &amp; publish</p>
               <Row label="Name" value={form.title} />
-              <Row label="Type" value={form.item_type} />
+              <Row label="Game" value={form.game_slug} />
+              <Row label="Category" value={form.item_type} />
               <Row label="Rarity" value={form.rarity} />
               <Row label="Pricing" value="Free" />
               <Row label="License" value={form.license} />
