@@ -16,6 +16,7 @@ import Policy from "@/pages/Policy";
 import News from "@/pages/News";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
+import NotFound from "@/pages/NotFound";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminMods from "@/pages/admin/AdminMods";
@@ -69,7 +70,7 @@ function App() {
               <Route path="audit" element={<AuditLog />} />
               <Route path="anomalies" element={<Anomaly />} />
             </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </WebSocketProvider>
