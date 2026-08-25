@@ -37,10 +37,10 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-center gap-6 pt-8">          <div className="flex flex-col sm:flex-row items-center gap-4 text-xs text-[#FFF8E1]/50 font-mono">
-            <span>© 2026 QIVEO GAMES INC.</span>
+            <span>© 2026 QIVEO GAMES</span>
             <div className="flex gap-4">
               <a href="#" className="hover:text-[#92400E] transition-colors">TWITTER</a>
-              <a href="#" className="hover:text-[#92400E] transition-colors">DISCORD</a>
+              <a href="https://discord.gg/5cweav9rsu" target="_blank" rel="noreferrer" className="hover:text-[#92400E] transition-colors">DISCORD</a>
               <a href="#" className="hover:text-[#92400E] transition-colors">GITHUB</a>
             </div>
           </div>
