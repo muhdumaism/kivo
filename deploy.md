@@ -104,15 +104,8 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/qiveo.dev/privkey.pem;
 
     root /var/www/qiveo/frontend/build;
-    index index.html;
-
-    # React routing fallback
+    # Proxy all traffic to FastAPI so it can inject server-side SEO metadata
     location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # FastAPI backend API proxy
-    location /api {
         proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;

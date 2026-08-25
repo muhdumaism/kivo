@@ -19,7 +19,8 @@ from typing import List, Optional, Literal
 import jwt
 import bcrypt
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
-from fastapi.responses import StreamingResponse, FileResponse, RedirectResponse
+from fastapi.responses import StreamingResponse, FileResponse, RedirectResponse, HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, select, update, delete, func, or_, and_, desc, asc, Column, String, Boolean, Integer, Float, Text, JSON
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
@@ -2393,3 +2394,145 @@ app.add_middleware(
 @app.on_event("shutdown")
 async def shutdown():
     await engine.dispose()
+
+FRONTEND_BUILD_DIR = ROOT_DIR.parent / "frontend" / "build"
+if (FRONTEND_BUILD_DIR / "static").exists():
+    app.mount("/static", StaticFiles(directory=FRONTEND_BUILD_DIR / "static"), name="static")
+
+@app.get("/sitemap.xml")
+async def generate_sitemap():
+    mods = await db.mods.find({"status": "approved"})
+    urls = []
+    base_url = "https://qiveo.dev"
+    for page in ["", "/browse", "/news", "/about", "/contact"]:
+        urls.append(f"<url><loc>{base_url}{page}</loc><changefreq>daily</changefreq><priority>0.8</priority></url>")
+    for mod in mods:
+        cat = mod.get("category", "item")
+        slug = mod.get("slug")
+        lastmod = mod.get("updated_at", mod.get("created_at", datetime.now(timezone.utc).isoformat()))
+        urls.append(f"<url><loc>{base_url}/{cat}/{slug}</loc><lastmod>{lastmod}</lastmod><changefreq>weekly</changefreq></url>")
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "\n".join(urls) + '\n</urlset>'
+    return Response(content=xml, media_type="application/xml")
+
+@app.get("/robots.txt")
+async def generate_robots():
+    text = "User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /profile/\nDisallow: /creator/\nSitemap: https://qiveo.dev/sitemap.xml\n"
+    return Response(content=text, media_type="text/plain")
+
+@app.get("/{full_path:path}")
+async def catch_all(full_path: str):
+    file_path = FRONTEND_BUILD_DIR / full_path
+    if full_path and file_path.is_file() and file_path.name != "index.html":
+        return FileResponse(file_path)
+    index_path = FRONTEND_BUILD_DIR / "index.html"
+    if not index_path.exists():
+        return HTMLResponse("<h1>Frontend build not found</h1>", status_code=404)
+    with open(index_path, "r", encoding="utf-8") as f:
+        html = f.read()
+    seo_tags = ""
+    status_code = 200
+    parts = full_path.strip("/").split("/")
+    
+    html = re.sub(r'<title>.*?</title>', '', html, count=1, flags=re.DOTALL)
+    
+    if len(parts) == 2 and parts[0] not in ["api", "static", "admin", "profile", "creator"]:
+        cat = parts[0]
+        slug = parts[1]
+        mod = await db.mods.find_one({"slug": slug, "status": "approved"})
+        if mod:
+            title = f"{mod['title']} — {cat.capitalize()} for Minecraft | QIVEO.dev"
+            desc = mod.get("summary", "")[:150]
+            icon = mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+            url = f"https://qiveo.dev/{cat}/{slug}"
+            seo_tags = f'''
+            <title>{title}</title>
+            <meta name="description" content="{desc}">
+            <link rel="canonical" href="{url}">
+            <meta property="og:type" content="website">
+            <meta property="og:title" content="{mod['title']} — {cat.capitalize()} for Minecraft">
+            <meta property="og:description" content="{desc}">
+            <meta property="og:url" content="{url}">
+            <meta property="og:image" content="{icon}">
+            <meta property="og:site_name" content="QIVEO.dev">
+            <meta name="twitter:card" content="summary">
+            <meta name="twitter:title" content="{mod['title']} — {cat.capitalize()} for Minecraft">
+            <meta name="twitter:description" content="{desc}">
+            <meta name="twitter:image" content="{icon}">
+            '''
+            json_ld = {
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": mod["title"],
+              "description": desc,
+              "image": icon,
+              "applicationCategory": "GameApplication",
+              "operatingSystem": "Minecraft",
+              "datePublished": mod.get("created_at"),
+              "dateModified": mod.get("updated_at", mod.get("created_at")),
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            }
+            breadcrumb = {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://qiveo.dev/"},
+                    {"@type": "ListItem", "position": 2, "name": cat.capitalize(), "item": f"https://qiveo.dev/browse"},
+                    {"@type": "ListItem", "position": 3, "name": mod["title"], "item": url}
+                ]
+            }
+            seo_tags += f"\n<script type='application/ld+json'>\n{json.dumps(json_ld)}\n</script>"
+            seo_tags += f"\n<script type='application/ld+json'>\n{json.dumps(breadcrumb)}\n</script>"
+        else:
+            status_code = 404
+            seo_tags = "<title>Page Not Found | QIVEO.dev</title>"
+    elif full_path == "":
+        title = "QIVEO.dev — Minecraft Marketplace"
+        desc = "Qiveo is a developer-friendly marketplace of indie games, skins, mods, and blocky collectibles."
+        seo_tags = f'''
+        <title>{title}</title>
+        <meta name="description" content="{desc}">
+        <link rel="canonical" href="https://qiveo.dev/">
+        <meta property="og:title" content="{title}">
+        <meta property="og:description" content="{desc}">
+        <meta property="og:image" content="https://qiveo.dev/qiveo-logo-nobg-.png">
+        '''
+        json_ld = {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "QIVEO.dev",
+            "url": "https://qiveo.dev/",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://qiveo.dev/browse?search={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+        org_ld = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Qiveo Development",
+            "url": "https://qiveo.dev/",
+            "logo": "https://qiveo.dev/qiveo-logo-nobg-.png",
+            "sameAs": ["https://discord.gg/5cweav9rsu"]
+        }
+        seo_tags += f"\n<script type='application/ld+json'>\n{json.dumps(json_ld)}\n</script>"
+        seo_tags += f"\n<script type='application/ld+json'>\n{json.dumps(org_ld)}\n</script>"
+    elif full_path.startswith("browse"):
+        title = "Browse Minecraft Mods & Plugins | QIVEO.dev"
+        desc = "Discover thousands of Minecraft plugins, mods, maps, and more on Qiveo."
+        seo_tags = f'''
+        <title>{title}</title>
+        <meta name="description" content="{desc}">
+        <link rel="canonical" href="https://qiveo.dev/browse">
+        '''
+    else:
+        seo_tags = f"<title>QIVEO.dev</title>"
+        
+    if seo_tags:
+        html = html.replace("<head>", f"<head>\n{seo_tags}", 1)
+        
+    return HTMLResponse(content=html, status_code=status_code)

@@ -193,7 +193,7 @@ export default function ProductDetail() {
 
             <Card title="Creators">
               <div className="flex items-center gap-3">
-                <img src={`https://api.dicebear.com/7.x/bottts/svg?seed=${item.author_name}`} alt="" className="w-10 h-10 rounded-xl border border-[#92400E] bg-[#24201A] object-cover" />
+                <img loading="lazy" src={`https://api.dicebear.com/7.x/bottts/svg?seed=${item.author_name}`} alt="" className="w-10 h-10 rounded-xl border border-[#92400E] bg-[#24201A] object-cover" />
                 <div className="min-w-0">
                   <p className="text-[#FFF8E1] font-heading font-extrabold text-sm flex items-center gap-1.5 truncate">@{item.author_name}</p>
                   <p className="text-[10px] font-mono text-[#FFF8E1]/50 font-bold flex items-center gap-1"><Crown className="w-3 h-3 text-[#FFF8E1]" />Owner</p>
@@ -241,7 +241,7 @@ const Detail = ({ icon: Icon, label, value }) => (
 function Gallery({ item }) {
   const imgs = item.gallery || [];
   if (!imgs.length) return <p className="text-[#FFF8E1]/40 font-mono font-bold">No gallery images yet.</p>;
-  return <div className="grid grid-cols-2 gap-4">{imgs.map((g, i) => <img key={i} src={g.startsWith("http") ? g : `${API.replace("/api", "")}${g}`} alt="" className="rounded-2xl border-2 border-[#92400E] w-full object-cover shadow-[2px_2px_0px_0px_rgba(20,20,20,1)]" />)}</div>;
+  return <div className="grid grid-cols-2 gap-4">{imgs.map((g, i) => <img loading="lazy" key={i} src={g.startsWith("http") ? g : `${API.replace("/api", "")}${g}`} alt="" className="rounded-2xl border-2 border-[#92400E] w-full object-cover shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] aspect-video" />)}</div>;
 }
 
 function Changelog({ versions }) {
@@ -316,7 +316,7 @@ function Engagement({ item, user, comments, onReload, onComments }) {
         <div className="space-y-3">
           {comments.length ? comments.map((c) => (
             <div key={c.id} className="flex gap-2.5 items-start">
-              <img src={c.user_avatar} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-lg border border-[#92400E] bg-[#24201A] object-cover mt-1" />
+              <img loading="lazy" src={c.user_avatar} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-lg border border-[#92400E] bg-[#24201A] object-cover mt-1" />
               <div className="bg-[#24201A] border-2 border-[#92400E] rounded-2xl p-3 flex-1 shadow-[2px_2px_0px_0px_rgba(20,20,20,1)]">
                 <span className="text-[#FFF8E1] text-xs font-heading font-extrabold">@{c.user_name}</span>
                 <p className="text-[#FFF8E1]/85 text-sm mt-1 font-medium">{c.body}</p>

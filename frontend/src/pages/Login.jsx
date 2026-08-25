@@ -71,7 +71,7 @@ export default function Login() {
       </header>
 
       {/* Main Login Box */}
-      <div className="flex-1 flex items-center justify-center p-6 my-12">
+      <div className="min-h-[calc(100vh-73px)] flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-[#171512] border-2 border-[#92400E] rounded-3xl p-8 shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] text-[#FFF8E1]">
           <h1 className="font-heading text-3xl font-black uppercase text-center tracking-tight">Connect to Qiveo</h1>
           <p className="text-[#FFF8E1]/60 text-center mt-2 text-sm font-semibold">Choose a secure provider to authenticate</p>
