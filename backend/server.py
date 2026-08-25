@@ -1276,6 +1276,15 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
     title = payload.get("title", "").strip()
     if not title:
         raise HTTPException(status_code=400, detail="Title is required")
+        
+    requested_slug = (payload.get("slug") or "").strip()
+    slug = slugify(requested_slug) if requested_slug else slugify(title)
+    
+    valid_rarities = ["Common", "Rare", "Epic", "Legendary"]
+    rarity = payload.get("rarity") or "Common"
+    if rarity not in valid_rarities:
+        raise HTTPException(status_code=400, detail=f"Invalid rarity. Choose one of: {', '.join(valid_rarities)}")
+        
     game_slug = payload.get("game_slug", "minecraft")
     game = await db.games.find_one({"slug": game_slug})
     if not game:
