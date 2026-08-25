@@ -249,3 +249,44 @@ body {
   color: #92400E;
 }
 
+/* Kukuri Hover Effect */
+.link--kukuri {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    padding: 2px 0;
+}
+
+.link--kukuri::after {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    right: 0;
+    background: #F5C542;
+    transform: translate3d(-100%, 0, 0);
+    transition: transform 0.4s;
+    transition-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+    z-index: 1;
+}
+
+.link--kukuri:hover::after {
+    transform: translate3d(100%, 0, 0);
+}
+
+.link--kukuri::before {
+    content: attr(data-letters);
+    position: absolute;
+    z-index: 2;
+    overflow: hidden;
+    color: #F5C542;
+    white-space: nowrap;
+    width: 0%;
+    transition: width 0.4s 0.3s;
+}
+
+.link--kukuri:hover::before {
+    width: 100%;
+}
+
