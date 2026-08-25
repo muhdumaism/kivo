@@ -1820,12 +1820,22 @@ async def edit_mod(mod_id: str, payload: dict, user: dict = Depends(get_current_
     for k in ("summary", "description", "license", "icon", "rarity", "contains_ai"):
         if k in payload:
             allowed[k] = payload[k]
+    target_game_slug = mod.get("game_slug", "minecraft")
+    if "game_slug" in payload:
+        new_game_slug = payload["game_slug"]
+        game_check = await db.games.find_one({"slug": new_game_slug})
+        if game_check:
+            allowed["game_slug"] = new_game_slug
+            allowed["game_name"] = game_check["name"]
+            target_game_slug = new_game_slug
+            
     if "category" in payload:
         cat_slug = slugify(payload["category"])
-        if cat_slug in GAME_CATEGORIES.get(mod["game_slug"], []):
+        if cat_slug in GAME_CATEGORIES.get(target_game_slug, []):
             allowed["category"] = cat_slug
         else:
-            raise HTTPException(status_code=400, detail="Invalid category")
+            raise HTTPException(status_code=400, detail=f"Invalid category {cat_slug} for game {target_game_slug}")
+    
     if "name" in payload and payload["name"].strip():
         allowed["title"] = payload["name"].strip()
     if payload.get("visibility") in ("public", "unlisted", "private"):

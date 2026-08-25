@@ -66,7 +66,7 @@ export default function CreatorDashboard() {
             <div key={m.id} data-testid={`creator-mod-${m.slug}`} className="bg-[#24201A] border border-[#92400E] rounded-2xl p-4 flex items-center gap-4 flex-wrap transition-colors hover:border-[#F5C542]/50">
               <img src={m.icon} alt="" className="w-14 h-14 rounded-xl border border-[#92400E] bg-[#171512] object-cover" />
               <div className="min-w-0 flex-1">
-                <Link to={`/item/${m.slug}`} className="font-heading font-bold text-[#FFF8E1] hover:text-[#F5C542] transition-colors">{m.title}</Link>
+                <Link to={`/${m.category || "item"}/${m.slug}`} className="font-heading font-bold text-[#FFF8E1] hover:text-[#F5C542] transition-colors">{m.title}</Link>
                 <p className="font-mono text-xs text-[#FFF8E1]/50 mt-1">{m.version_count} versions · {fmt(m.downloads)} grabs</p>
               </div>
               {m.review_reason && m.status !== "approved" && <p className="font-mono text-xs text-[#F59E0B] max-w-xs bg-[#F59E0B]/10 px-3 py-1.5 rounded-lg">"{m.review_reason}"</p>}

@@ -46,7 +46,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/browse" element={<Browse />} />
             <Route path="/item/:slug" element={<ProductDetail />} />
-            <Route path="/mod/:slug" element={<ProductDetail />} />
+            <Route path="/:category/:slug" element={<ProductDetail />} />
             <Route path="/game/:slug" element={<Navigate to="/browse" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/policy" element={<Policy />} />

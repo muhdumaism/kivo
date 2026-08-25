@@ -11,7 +11,7 @@ function fmt(n) {
 
 export function ItemCard({ item }) {
   return (
-    <Link to={`/item/${item.slug}`} data-testid={`item-card-${item.slug}`} className="group block">
+    <Link to={`/${item.category || "item"}/${item.slug}`} data-testid={`item-card-${item.slug}`} className="group block">
       <CornerFrame hover className="bg-plum border border-plumborder rounded-2xl p-2.5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:border-violet/60 group-hover:glow-violet">
         <div className="relative overflow-hidden rounded-xl aspect-square bg-gradient-to-br from-plum2 to-ink">
           <img src={item.icon} alt={item.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />

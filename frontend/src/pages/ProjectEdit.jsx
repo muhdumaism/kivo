@@ -31,7 +31,7 @@ export default function ProjectEdit() {
   useEffect(() => {
     if (item && user && item.author_id !== user.id && !isStaff(user)) {
       toast.error("You don't own this project");
-      nav(`/item/${slug}`);
+      nav(`/${item.category || "item"}/${slug}`);
     }
   }, [item, user, slug, nav]);
   if (item === false) return <div className="min-h-screen bg-transparent"><Navbar /><p className="text-warm p-10">Not found.</p></div>;
@@ -51,7 +51,7 @@ export default function ProjectEdit() {
             <h1 className="font-heading font-extrabold text-warm text-lg truncate">{item.title}</h1>
             <p className="text-xs text-lavender2/50">Editing {getCategoryName(item.game_slug, item.category)} project · created {new Date(item.created_at).toLocaleDateString()}</p>
           </div>
-          <Link to={`/item/${slug}`} data-testid="project-page-btn" className="inline-flex items-center gap-1.5 border border-plumborder text-lavender2 px-3 py-2 rounded-lg text-sm font-semibold hover:border-violet/60"><ExternalLink className="w-4 h-4" />Project page</Link>
+          <Link to={`/${item.category || "item"}/${slug}`} data-testid="project-page-btn" className="inline-flex items-center gap-1.5 border border-plumborder text-lavender2 px-3 py-2 rounded-lg text-sm font-semibold hover:border-violet/60"><ExternalLink className="w-4 h-4" />Project page</Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">

@@ -178,7 +178,7 @@ function ProjectReviewModal({ slug, onClose }) {
               <p className="font-mono text-[10px] uppercase tracking-widest text-warm/40 mb-2">Monetization</p>
               <p className="text-warm text-sm font-semibold">{item.monetization ? "Enabled" : "Disabled"}</p>
             </div>
-            <Link to={`/item/${item.slug}`} className="inline-flex items-center gap-1.5 border border-plumborder text-lavender2 w-full justify-center py-2.5 rounded-lg text-sm font-semibold hover:border-violet/60 hover:text-warm transition-colors"><ExternalLink className="w-4 h-4" />Open project page</Link>
+            <Link to={`/${item.category || "item"}/${item.slug}`} className="inline-flex items-center gap-1.5 border border-plumborder text-lavender2 w-full justify-center py-2.5 rounded-lg text-sm font-semibold hover:border-violet/60 hover:text-warm transition-colors"><ExternalLink className="w-4 h-4" />Open project page</Link>
           </div>
         </div>
       </div>

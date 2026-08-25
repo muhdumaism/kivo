@@ -10,7 +10,7 @@ function fmt(n) {
 
 export function ItemCard({ item }) {
   return (
-    <Link to={`/item/${item.slug}`} data-testid={`item-card-${item.slug}`} className="group block">
+    <Link to={`/${item.category || "item"}/${item.slug}`} data-testid={`item-card-${item.slug}`} className="group block">
       <div className="bg-[#171512] border-2 border-[#92400E] rounded-3xl p-3.5 transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]">
         <div className="relative overflow-hidden rounded-2xl aspect-square border-2 border-[#92400E] bg-[#24201A]">
           <img src={item.icon} alt={item.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />

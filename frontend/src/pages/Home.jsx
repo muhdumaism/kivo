@@ -131,7 +131,7 @@ export default function Home() {
 
 function GameCard({ item }) {
   return (
-    <Link to={`/item/${item.slug}`} className="group block text-[#FFF8E1]">
+    <Link to={`/${item.category || "item"}/${item.slug}`} className="group block text-[#FFF8E1]">
       <div className="relative">
         <div className="border-2 border-[#92400E] rounded-3xl overflow-hidden bg-[#24201A] aspect-square relative shadow-[4px_4px_0px_0px_rgba(20,20,20,1)] group-hover:shadow-[6px_6px_0px_0px_rgba(20,20,20,1)] transition-all duration-300 group-hover:-translate-y-1">
           <img src={item.icon} alt={item.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />

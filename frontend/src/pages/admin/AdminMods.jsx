@@ -141,7 +141,7 @@ export default function AdminMods() {
                     <div className="flex items-center gap-3">
                       <img src={m.icon} alt="" className="w-9 h-9 rounded border border-slate-light bg-charcoal object-cover shrink-0" />
                       <div className="min-w-0">
-                        <Link to={`/item/${m.slug}`} className="font-heading font-bold text-warm hover:text-amber transition-colors flex items-center gap-1.5 truncate" target="_blank" rel="noreferrer">
+                        <Link to={`/${m.category || "item"}/${m.slug}`} className="font-heading font-bold text-warm hover:text-amber transition-colors flex items-center gap-1.5 truncate" target="_blank" rel="noreferrer">
                           {m.title} <ExternalLink className="w-3 h-3 opacity-50 shrink-0" />
                         </Link>
                         <p className="text-[10px] text-warm/50 mt-0.5 truncate">{m.category}</p>
