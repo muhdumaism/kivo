@@ -10,6 +10,7 @@ import { Search, ArrowRight, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useWebSocket } from "@/context/WebSocketContext";
 
+import { getCategoryName } from "@/content/games";
 const CHIPS = ["All Games", "Minecraft", "Roblox", "Hytale", "Discord"];
 
 export default function Home() {
@@ -143,9 +144,8 @@ function GameCard({ item }) {
               BY {item.author_name.toUpperCase()}
             </span>
           </div>
-          
           <span className="bg-[#F5C542] text-[#171512] text-[9px] font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 border border-[#92400E]">
-            {item.item_type}
+            {getCategoryName(item.game_slug, item.category)}
           </span>
         </div>
       </div>

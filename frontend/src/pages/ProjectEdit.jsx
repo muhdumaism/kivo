@@ -9,6 +9,7 @@ import {
   ArrowLeft, Settings, ShieldQuestion, Tags, FileText, GitBranch, Scale, Images, Link2,
   Users, BarChart3, Upload, Trash2, ExternalLink, ClipboardCheck, Check, X
 } from "lucide-react";
+import { GAME_CATEGORIES, getCategoryName } from "@/content/games";
 
 const NAV = [
   ["general", "General", Settings], ["submit", "Submit for Review", ClipboardCheck], ["disclosures", "Disclosures", ShieldQuestion], ["tags", "Tags", Tags],
@@ -48,7 +49,7 @@ export default function ProjectEdit() {
           <img src={item.icon} alt="" className="w-11 h-11 rounded-lg border border-plumborder bg-plum2 object-cover" />
           <div className="flex-1 min-w-0">
             <h1 className="font-heading font-extrabold text-warm text-lg truncate">{item.title}</h1>
-            <p className="text-xs text-lavender2/50">Editing {item.item_type?.toLowerCase()} project · created {new Date(item.created_at).toLocaleDateString()}</p>
+            <p className="text-xs text-lavender2/50">Editing {getCategoryName(item.game_slug, item.category)} project · created {new Date(item.created_at).toLocaleDateString()}</p>
           </div>
           <Link to={`/item/${slug}`} data-testid="project-page-btn" className="inline-flex items-center gap-1.5 border border-plumborder text-lavender2 px-3 py-2 rounded-lg text-sm font-semibold hover:border-violet/60"><ExternalLink className="w-4 h-4" />Project page</Link>
         </div>
@@ -240,24 +241,16 @@ function LicenseSec({ item, save }) {
   );
 }
 
-const GAMES = {
-  minecraft: ["Plugins", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"],
-  roblox: ["Game setups", "Maps", "Scripts", "Vehicles", "Weapons", "Models", "Clothing", "Graphics & UI", "Animations & VFX", "Audio"],
-  hytale: ["Plugins", "Data assets", "Server setups", "Builds", "Graphics", "Textures", "Models", "Audio", "Other"],
-  discord: ["Bots", "Graphics", "Other"]
-};
-
 function TagsSec({ item, save }) {
   const [tags, setTags] = useState((item.tags || []).join(", "));
   const [game, setGame] = useState(item.game_slug || "minecraft");
-  const [category, setCategory] = useState(item.category || item.item_type || "Plugins");
+  const [category, setCategory] = useState(item.category || "plugins");
 
   const saveTags = () => {
     save({ 
       tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
       game_slug: game,
-      category: category,
-      item_type: category // for backwards compatibility
+      category: category
     });
   };
 
@@ -267,18 +260,15 @@ function TagsSec({ item, save }) {
       
       <div>
         <label className="block font-mono text-[10px] uppercase tracking-widest text-[#FFF8E1]/50 mb-1.5 font-bold">Game / Platform</label>
-        <select value={game} onChange={(e) => { setGame(e.target.value); setCategory(GAMES[e.target.value][0]); }} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
-          <option value="minecraft">Minecraft</option>
-          <option value="roblox">Roblox</option>
-          <option value="hytale">Hytale</option>
-          <option value="discord">Discord</option>
+        <select value={game} onChange={(e) => { setGame(e.target.value); setCategory(GAME_CATEGORIES[e.target.value]?.[0]?.id || ""); }} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
+          {Object.keys(GAME_CATEGORIES).map(g => <option key={g} value={g}>{g}</option>)}
         </select>
       </div>
 
       <div>
         <label className="block font-mono text-[10px] uppercase tracking-widest text-[#FFF8E1]/50 mb-1.5 font-bold">Category</label>
         <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
-          {GAMES[game]?.map((c) => <option key={c} value={c}>{c}</option>)}
+          {(GAME_CATEGORIES[game] || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
 

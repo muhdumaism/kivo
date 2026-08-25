@@ -5,8 +5,8 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 
-const TYPES = ["Mod", "Plugin", "Skin", "Character", "Build", "World", "Collectible"];
-const TYPE_MAP = { Plugin: "Mod" }; // Plugin stored as Mod item_type
+import { GAME_CATEGORIES, getCategoryName } from "@/content/games";
+
 const VIS = [["public", "Public"], ["unlisted", "Unlisted"], ["private", "Private"]];
 
 function slugify(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
@@ -14,7 +14,7 @@ function slugify(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace
 export function CreateProjectModal({ onClose }) {
   const nav = useNavigate();
   const { user } = useAuth();
-  const [form, setForm] = useState({ type: "Mod", name: "", slug: "", owner: "self", visibility: "public", summary: "" });
+  const [form, setForm] = useState({ game: "minecraft", category: "plugins", name: "", slug: "", owner: "self", visibility: "public", summary: "" });
   const [slugEdited, setSlugEdited] = useState(false);
   const [busy, setBusy] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -33,8 +33,8 @@ export function CreateProjectModal({ onClose }) {
     try {
       const { data } = await api.post("/creator/mods", {
         title: form.name, summary: form.summary, description: `# ${form.name}\n\n${form.summary}`,
-        item_type: TYPE_MAP[form.type] || form.type, visibility: form.visibility,
-        category: TYPE_MAP[form.type] || form.type, game_slug: "minecraft",
+        visibility: form.visibility,
+        category: form.category, game_slug: form.game,
       });
       toast.success(`Project created · ${data.status === "approved" ? "live" : "under review"}`);
       onClose();
@@ -51,11 +51,19 @@ export function CreateProjectModal({ onClose }) {
           <button data-testid="create-close" onClick={onClose} className="text-[#FFF8E1]/50 hover:text-[#FFF8E1] transition-colors bg-[#171512] rounded-full p-1.5"><X className="w-5 h-5" /></button>
         </div>
         <div className="p-6 space-y-5">
-          <div>
-            <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Type</label>
-            <select data-testid="cp-type" value={form.type} onChange={(e) => set("type", e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
-              {TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Game / Platform</label>
+              <select data-testid="cp-game" value={form.game} onChange={(e) => { set("game", e.target.value); set("category", GAME_CATEGORIES[e.target.value]?.[0]?.id || ""); }} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
+                {Object.keys(GAME_CATEGORIES).map((g) => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Category</label>
+              <select data-testid="cp-type" value={form.category} onChange={(e) => set("category", e.target.value)} className="w-full bg-[#171512] border border-[#92400E] rounded-xl px-4 py-3 text-[#FFF8E1] text-sm focus:outline-none focus:border-[#F5C542] transition-colors">
+                {(GAME_CATEGORIES[form.game] || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold font-mono tracking-widest uppercase text-[#FFF8E1]/50 mb-2">Name</label>

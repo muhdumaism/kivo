@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Download, Sparkles } from "lucide-react";
+import { getCategoryName } from "@/content/games";
 
 function fmt(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
@@ -29,7 +30,7 @@ export function ItemCard({ item }) {
             </span>
           )}
           <span className="absolute bottom-2 right-2 font-mono text-[9px] uppercase tracking-widest bg-[#F5C542] text-[#171512] px-2 py-0.5 rounded-full border border-[#92400E] font-bold">
-            {item.category || item.item_type}
+            {getCategoryName(item.game_slug, item.category)}
           </span>
         </div>
         <div className="pt-3 pb-1">

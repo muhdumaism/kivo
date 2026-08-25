@@ -7,14 +7,9 @@ import { Footer } from "@/components/qiveo/Footer";
 import { Reveal } from "@/components/qiveo/Reveal";
 import { Search, SlidersHorizontal } from "lucide-react";
 
-const GAMES = {
-  Minecraft: ["Plugins", "Server setups", "Builds", "Configs", "Graphics", "Textures", "Models", "Server jars", "Skripts", "Other"],
-  Roblox: ["Game setups", "Maps", "Scripts", "Vehicles", "Weapons", "Models", "Clothing", "Graphics & UI", "Animations & VFX", "Audio"],
-  Hytale: ["Plugins", "Data assets", "Server setups", "Builds", "Graphics", "Textures", "Models", "Audio", "Other"],
-  Discord: ["Bots", "Graphics", "Other"]
-};
+import { GAME_CATEGORIES } from "@/content/games";
 
-const DISCORD_BADGES = { "Bots": 659, "Graphics": 72, "Other": 23 };
+const DISCORD_BADGES = { "bots": 659, "graphics": 72, "other": 23 };
 const SORTS = [["trending", "Trending"], ["downloads", "Most grabbed"], ["rating", "Top rated"], ["newest", "Newest"]];
 
 export default function Browse() {
@@ -23,7 +18,7 @@ export default function Browse() {
   const [q, setQ] = useState(params.get("q") || "");
   const [loading, setLoading] = useState(true);
 
-  const game = params.get("game") || "Minecraft";
+  const game = params.get("game") || "minecraft";
   const category = params.get("category") || "";
   const sort = params.get("sort") || "trending";
 
@@ -75,11 +70,11 @@ export default function Browse() {
         <div className="mb-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-warm/50 mb-3 font-bold">Games / Platforms</p>
           <div className="flex flex-wrap gap-2 mb-4">
-            {Object.keys(GAMES).map((g) => (
+            {Object.keys(GAME_CATEGORIES).map((g) => (
               <button
                 key={g}
                 onClick={() => setParam("game", g)}
-                className={`px-6 py-2.5 rounded-full font-heading font-extrabold text-sm transition-all ${
+                className={`px-6 py-2.5 rounded-full font-heading font-extrabold text-sm transition-all capitalize ${
                   game === g
                     ? "bg-primary text-[#171512]"
                     : "bg-[#24201A] text-warm hover:bg-[#92400E]/30"
@@ -92,13 +87,13 @@ export default function Browse() {
 
           <div className="bg-[#24201A] border border-[#92400E]/50 rounded-2xl p-4 flex flex-wrap gap-2.5 min-h-[72px] items-center">
             <Chip label="All" active={!category} onClick={() => setParam("category", "")} />
-            {GAMES[game]?.map((cat) => (
+            {(GAME_CATEGORIES[game] || []).map((cat) => (
               <Chip 
-                key={cat} 
-                label={cat} 
-                badge={game === "Discord" ? DISCORD_BADGES[cat] : null}
-                active={category === cat} 
-                onClick={() => setParam("category", category === cat ? "" : cat)} 
+                key={cat.id} 
+                label={cat.name} 
+                badge={game === "discord" ? DISCORD_BADGES[cat.id] : null}
+                active={category === cat.id} 
+                onClick={() => setParam("category", category === cat.id ? "" : cat.id)} 
               />
             ))}
           </div>

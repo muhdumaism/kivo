@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+from config import GAME_CATEGORIES
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1161,7 +1162,6 @@ async def get_game(slug: str):
 async def list_mods(
     game: Optional[str] = None,
     category: Optional[str] = None,
-    item_type: Optional[str] = None,
     rarity: Optional[str] = None,
     tag: Optional[str] = None,
     loader: Optional[str] = None,
@@ -1174,10 +1174,8 @@ async def list_mods(
     query = {"status": "approved", "visibility": {"$nin": ["private", "unlisted"]}}
     if game:
         query["game_slug"] = game
-    if category:
+    if category and category.lower() != "all":
         query["category"] = category
-    if item_type:
-        query["item_type"] = item_type
     if rarity:
         query["rarity"] = rarity
     if tag:
@@ -1278,19 +1276,17 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
     title = payload.get("title", "").strip()
     if not title:
         raise HTTPException(status_code=400, detail="Title is required")
-    valid_types = ["Skin", "Character", "Build", "World", "Mod", "Collectible"]
-    valid_rarities = ["Common", "Rare", "Epic", "Legendary"]
-    item_type = payload.get("item_type", "Mod")
-    if item_type not in valid_types:
-        raise HTTPException(status_code=400, detail=f"Invalid item type. Choose one of: {', '.join(valid_types)}")
-    rarity = payload.get("rarity") or "Common"
-    if rarity not in valid_rarities:
-        raise HTTPException(status_code=400, detail=f"Invalid rarity. Choose one of: {', '.join(valid_rarities)}")
-    requested_slug = (payload.get("slug") or "").strip()
-    slug = slugify(requested_slug) if requested_slug else slugify(title)
-    game = await db.games.find_one({"slug": payload.get("game_slug", "minecraft")})
+    game_slug = payload.get("game_slug", "minecraft")
+    game = await db.games.find_one({"slug": game_slug})
     if not game:
         raise HTTPException(status_code=400, detail="Invalid game")
+        
+    category_raw = payload.get("category", "")
+    category_slug = slugify(category_raw)
+    valid_categories = GAME_CATEGORIES.get(game_slug, [])
+    if category_slug not in valid_categories:
+        raise HTTPException(status_code=400, detail=f"Invalid category '{category_raw}' for game '{game_slug}'.")
+
     if await db.mods.find_one({"slug": slug}):
         slug = f"{slug}-{uuid.uuid4().hex[:5]}"
     trusted = user.get("trust_tier") == "verified" or user.get("verified_creator")
@@ -1306,7 +1302,6 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
         "author_id": user["id"],
         "author_name": user["name"],
         "author_verified": bool(user.get("verified_creator")),
-        "item_type": payload.get("item_type", "Mod"),
         "rarity": rarity,
         "pricing": "free",
         "price": 0,
@@ -1315,7 +1310,7 @@ async def create_mod(payload: dict, user: dict = Depends(get_current_user)):
         "org_id": payload.get("org_id") or None,
         "follows": 0,
         "favorites_count": 0,
-        "category": payload.get("category", "Utility"),
+        "category": category_slug,
         "tags": payload.get("tags", [])[:8],
         "mod_loaders": payload.get("mod_loaders", []),
         "game_versions": payload.get("game_versions", []),
@@ -1543,7 +1538,7 @@ async def admin_list_mods(page: int = 1, limit: int = 20, search: str = "", stat
     query = {}
     if status:
         query["status"] = status
-    if category:
+    if category and category.lower() != "all":
         query["category"] = category
     if search:
         query["$or"] = [
@@ -1822,9 +1817,15 @@ async def edit_mod(mod_id: str, payload: dict, user: dict = Depends(get_current_
     if mod["author_id"] != user["id"] and user.get("role") not in STAFF_ROLES:
         raise HTTPException(status_code=403, detail="Not your project")
     allowed = {}
-    for k in ("summary", "description", "license", "icon", "item_type", "rarity", "contains_ai"):
+    for k in ("summary", "description", "license", "icon", "rarity", "contains_ai"):
         if k in payload:
             allowed[k] = payload[k]
+    if "category" in payload:
+        cat_slug = slugify(payload["category"])
+        if cat_slug in GAME_CATEGORIES.get(mod["game_slug"], []):
+            allowed["category"] = cat_slug
+        else:
+            raise HTTPException(status_code=400, detail="Invalid category")
     if "name" in payload and payload["name"].strip():
         allowed["title"] = payload["name"].strip()
     if payload.get("visibility") in ("public", "unlisted", "private"):
@@ -2286,8 +2287,8 @@ async def seed():
                 "description": f"# {title}\n\n{summary}\n\n{type_desc.get(itype, '')}",
                 "game_slug": "minecraft", "game_name": "Minecraft",
                 "author_id": creator["id"], "author_name": creator["name"], "author_verified": True,
-                "item_type": itype, "rarity": rarity, "pricing": "free", "price": 0,
-                "category": itype, "tags": tags, "mod_loaders": loaders, "game_versions": gvs,
+                "rarity": rarity, "pricing": "free", "price": 0,
+                "category": slugify(itype), "tags": tags, "mod_loaders": loaders, "game_versions": gvs,
                 "license": "MIT", "gallery": [], "icon": imgs[img],
                 "status": "approved", "staff_pick": pick, "downloads": dls, "rating_avg": rating,
                 "rating_count": rcount, "base_rating_sum": round(rating * rcount), "base_rating_count": rcount,
@@ -2318,8 +2319,8 @@ async def seed():
             "description": "# Neon Golem\n\nA brand new character skin awaiting review.",
             "game_slug": "minecraft", "game_name": "Minecraft",
             "author_id": creator["id"], "author_name": creator["name"], "author_verified": False,
-            "item_type": "Character", "rarity": "Rare", "pricing": "free", "price": 0,
-            "category": "Character", "tags": ["golem", "skin"], "mod_loaders": [],
+            "rarity": "Rare", "pricing": "free", "price": 0,
+            "category": "models", "tags": ["golem", "skin"], "mod_loaders": [],
             "game_versions": ["1.21.4"], "license": "MIT", "gallery": [],
             "icon": "https://api.dicebear.com/7.x/shapes/svg?seed=neon-golem",
             "status": "in_review", "staff_pick": False, "downloads": 0, "rating_avg": 0,
