@@ -41,8 +41,8 @@ body {
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #000000; }
-::-webkit-scrollbar-thumb { background: #F5C542; border-radius: 6px; border: 2px solid #000000; }
-::-webkit-scrollbar-thumb:hover { background: #333333; }
+::-webkit-scrollbar-thumb { background: #333333; border-radius: 6px; border: 2px solid #000000; }
+::-webkit-scrollbar-thumb:hover { background: #444444; }
 
 .font-heading { font-family: 'Sora', sans-serif; }
 .font-mono { font-family: 'IBM Plex Mono', monospace; }
