@@ -9,7 +9,7 @@ export function FAQSection() {
   if (!FAQS || FAQS.length === 0) return null;
 
   return (
-    <section className="py-20 border-t-2 border-[#92400E]">
+    <section className="py-20">
       <div className="max-w-4xl mx-auto px-4">
         <Reveal>
           <div className="text-center mb-12">

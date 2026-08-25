@@ -5,8 +5,8 @@ export function FeaturesSection() {
   if (!FEATURES || FEATURES.length === 0) return null;
 
   return (
-    <section className="py-20 border-t-2 border-[#92400E]">
-      <div className="max-w-7xl mx-auto">
+    <section className="py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <Reveal>
           <div className="text-center mb-16">
             <h2 className="font-heading font-black text-3xl sm:text-4xl text-[#FFF8E1] uppercase tracking-tight mb-4">
@@ -17,9 +17,10 @@ export function FeaturesSection() {
             </p>
           </div>
         </Reveal>
+      </div>
 
-        <Reveal>
-          <div className="relative overflow-hidden w-full flex items-center py-6">
+      <Reveal>
+        <div className="relative overflow-hidden w-full flex items-center py-6">
             <div className="flex w-max animate-marquee gap-6 hover:[animation-play-state:paused]">
               {[...FEATURES, ...FEATURES].map((feature, i) => {
                 const Icon = feature.icon;
@@ -42,7 +43,6 @@ export function FeaturesSection() {
             </div>
           </div>
         </Reveal>
-      </div>
     </section>
   );
 }
