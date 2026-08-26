@@ -21,8 +21,8 @@ export default function Home() {
   const { addListener } = useWebSocket();
 
   const load = () => {
-    api.get("/mods", { params: { sort: "trending", limit: 30 } }).then((r) => setTrending(r.data));
-    api.get("/mods", { params: { staff_pick: true, limit: 4 } }).then((r) => setPicks(r.data));
+    api.get("/mods", { params: { sort: "trending", limit: 30 } }).then((r) => setTrending(r.data.filter(i => i.category !== "skins")));
+    api.get("/mods", { params: { staff_pick: true, limit: 4 } }).then((r) => setPicks(r.data.filter(i => i.category !== "skins")));
   };
 
   useEffect(() => {

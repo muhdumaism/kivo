@@ -29,7 +29,9 @@ export default function Browse() {
     p.game = game.toLowerCase();
     if (category) p.category = category;
     
-    api.get("/mods", { params: p }).then((r) => setItems(r.data)).finally(() => setLoading(false));
+    api.get("/mods", { params: p }).then((r) => {
+      setItems(r.data.filter(item => item.category !== "skins"));
+    }).finally(() => setLoading(false));
   }, [params, sort, game, category]);
 
   useEffect(() => { load(); }, [load]);
