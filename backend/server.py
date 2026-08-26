@@ -1177,6 +1177,8 @@ async def list_mods(
         query["game_slug"] = game
     if category and category.lower() != "all":
         query["category"] = category
+    else:
+        query["category"] = {"$ne": "skins"}
     if rarity:
         query["rarity"] = rarity
     if tag:
