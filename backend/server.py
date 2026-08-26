@@ -2239,7 +2239,7 @@ async def publish_skin(
     tgs = json.loads(tags) if tags else []
     
     trusted = user.get('trust_tier') == 'verified' or user.get('verified_creator')
-    status = 'approved' if trusted else 'draft'
+    status = 'approved' if trusted else 'in_review'
     
     mod = {
         "id": mod_id,
