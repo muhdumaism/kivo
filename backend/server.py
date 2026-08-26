@@ -1968,9 +1968,17 @@ async def upload_icon(mod_id: str, file: UploadFile = File(...), user: dict = De
 @api.get("/gallery/{fname}")
 async def serve_gallery(fname: str):
     path = UPLOAD_DIR / "gallery" / fname
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(str(path))
+    if path.is_file():
+        return FileResponse(path)
+    raise HTTPException(status_code=404)
+
+# Fallback route for legacy skins that were saved with the wrong URL path
+@api.get("/uploads/gallery/{fname}")
+async def serve_legacy_gallery(fname: str):
+    path = UPLOAD_DIR / "gallery" / fname
+    if path.is_file():
+        return FileResponse(path)
+    raise HTTPException(status_code=404, detail="Not found")
 
 
 # ---------------------------------------------------------------------------
