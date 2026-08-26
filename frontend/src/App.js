@@ -20,6 +20,7 @@ import NotFound from "@/pages/NotFound";
 import Skins from "@/pages/Skins";
 import PlayerProfile from "@/pages/PlayerProfile";
 import SkinUpload from "@/pages/SkinUpload";
+import SkinDetail from "@/pages/SkinDetail";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminMods from "@/pages/admin/AdminMods";
@@ -59,6 +60,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/skins" element={<Skins />} />
             <Route path="/skins/player/:id" element={<PlayerProfile />} />
+            <Route path="/skins/:slug" element={<SkinDetail />} />
             <Route path="/profile" element={<Gate><Profile /></Gate>} />
             <Route path="/collections" element={<Gate><Collections /></Gate>} />
             <Route path="/project/:slug/edit" element={<Gate><ProjectEdit /></Gate>} />
