@@ -59,7 +59,9 @@ export default function SkinUpload() {
     try {
       // Create thumbnail from 3D canvas
       let thumbBlob = null;
-      if (viewerRef.current) {
+      if (viewerRef.current && skinViewerInstance.current) {
+        // Force render immediately before capture to avoid blank WebGL canvas (preserveDrawingBuffer issue)
+        skinViewerInstance.current.renderer.render(skinViewerInstance.current.scene, skinViewerInstance.current.camera);
         const dataUrl = viewerRef.current.toDataURL('image/png');
         thumbBlob = await (await fetch(dataUrl)).blob();
       } else {

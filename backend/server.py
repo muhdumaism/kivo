@@ -2689,11 +2689,11 @@ async def catch_all(full_path: str):
             if cat == "skins":
                 title = f"{mod['title']} by {mod['author_name']} — Minecraft Skin | QIVEO.dev"
                 desc = mod.get("summary") or f"Download the {mod['title']} Minecraft skin created by {mod['author_name']} on Qiveo."
-                icon = mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+                icon = mod.get("icon") or (mod.get("gallery")[0] if mod.get("gallery") else None) or "https://qiveo.dev/qiveo-logo-nobg-.png"
             else:
                 title = f"{mod['title']} — {cat.capitalize()} for Minecraft | QIVEO.dev"
                 desc = mod.get("summary", "")[:150] or f"Download {mod['title']} on Qiveo."
-                icon = mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+                icon = mod.get("icon") or "https://qiveo.dev/qiveo-logo-nobg-.png"
                 
             if icon.startswith("/"):
                 icon = f"https://qiveo.dev{icon.replace('/api', '/api')}" # Ensure no double prefix
