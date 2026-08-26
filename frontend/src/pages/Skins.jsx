@@ -14,7 +14,7 @@ export default function Skins() {
 
   useEffect(() => {
     // Fetch published skins from Qiveo marketplace
-    api.get('/mods?category=skins&limit=24').then(res => setSkins(res.data.mods || [])).catch(() => {});
+    api.get('/mods?category=skins&limit=24').then(res => setSkins(res.data || [])).catch(() => {});
   }, []);
 
   const search = (e) => {
