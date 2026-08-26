@@ -1980,6 +1980,34 @@ async def serve_legacy_gallery(fname: str):
         return FileResponse(path)
     raise HTTPException(status_code=404, detail="Not found")
 
+@api.post("/creator/skins/{mod_id}/file")
+async def update_skin_file(mod_id: str, file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod or (mod["author_id"] != user["id"] and user.get("role") not in ["admin", "staff"]):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    skin_data = await file.read()
+    if not file.filename.endswith('.png'):
+        raise HTTPException(status_code=400, detail="Skin must be a PNG file.")
+    
+    dims = get_png_dimensions(skin_data)
+    if not dims:
+        raise HTTPException(status_code=400, detail="Invalid PNG file.")
+        
+    gdir = UPLOAD_DIR / "gallery"
+    gdir.mkdir(parents=True, exist_ok=True)
+    
+    skin_id = mod_id.replace("mod_", "")
+    skin_path = gdir / f"{skin_id}_skin.png"
+    
+    with open(skin_path, "wb") as f:
+        f.write(skin_data)
+        
+    skin_url = f"/api/gallery/{skin_id}_skin.png"
+    await db.mods.update_one({"id": mod_id}, {"$set": {"gallery": [skin_url], "updated_at": now_iso()}})
+    
+    return {"url": skin_url}
+
 
 # ---------------------------------------------------------------------------
 # Notifications
@@ -2619,9 +2647,7 @@ async def catch_all(full_path: str):
             if cat == "skins":
                 title = f"{mod['title']} by {mod['author_name']} — Minecraft Skin | QIVEO.dev"
                 desc = mod.get("summary") or f"Download the {mod['title']} Minecraft skin created by {mod['author_name']} on Qiveo."
-                # Prefer the raw skin texture if the icon is blank/broken
-                raw_img = mod.get("gallery", [])[0] if mod.get("gallery") else None
-                icon = raw_img or mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+                icon = mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
             else:
                 title = f"{mod['title']} — {cat.capitalize()} for Minecraft | QIVEO.dev"
                 desc = mod.get("summary", "")[:150] or f"Download {mod['title']} on Qiveo."

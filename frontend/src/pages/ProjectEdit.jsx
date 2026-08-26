@@ -14,7 +14,7 @@ import { GAME_CATEGORIES, getCategoryName } from "@/content/games";
 const NAV = [
   ["general", "General", Settings], ["submit", "Submit for Review", ClipboardCheck], ["disclosures", "Disclosures", ShieldQuestion], ["tags", "Tags", Tags],
   ["description", "Description", FileText], ["versions", "Versions", GitBranch], ["license", "License", Scale],
-  ["gallery", "Gallery", Images], ["links", "Links", Link2], ["members", "Members", Users], ["analytics", "Analytics", BarChart3],
+  ["gallery", "Gallery", Images], ["skin_file", "Skin File", Upload], ["links", "Links", Link2], ["members", "Members", Users], ["analytics", "Analytics", BarChart3],
 ];
 const VIS = ["public", "unlisted", "private"];
 
@@ -56,7 +56,7 @@ export default function ProjectEdit() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">
           <aside className="bg-plum border border-plumborder rounded-2xl p-2 h-max">
-            {NAV.map(([id, label, Icon]) => (
+            {NAV.filter(([id]) => item.category === "skins" ? ["general", "tags", "skin_file", "analytics"].includes(id) : id !== "skin_file").map(([id, label, Icon]) => (
               <button key={id} data-testid={`edit-nav-${id}`} onClick={() => setSection(id)} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium mb-0.5 transition-colors ${section === id ? "bg-coral/15 text-coral2 border-l-2 border-coral" : "text-lavender2/70 hover:bg-plum2 hover:text-warm border-l-2 border-transparent"}`}><Icon className="w-4 h-4" />{label}</button>
             ))}
           </aside>
@@ -65,6 +65,7 @@ export default function ProjectEdit() {
             {section === "general" && <General item={item} save={save} />}
             {section === "description" && <Description item={item} save={save} />}
             {section === "gallery" && <GallerySec item={item} onDone={load} />}
+            {section === "skin_file" && <SkinFileSec item={item} onDone={load} />}
             {section === "versions" && <VersionsSec item={item} onUpload={() => setUploadOpen(true)} />}
             {section === "license" && <LicenseSec item={item} save={save} />}
             {section === "tags" && <TagsSec item={item} save={save} />}
@@ -131,22 +132,24 @@ function General({ item, save }) {
         <div className="flex rounded-lg border border-plumborder overflow-hidden bg-ink"><span className="px-3 py-2.5 bg-plum2 text-lavender2/50 text-sm font-mono border-r border-plumborder">qiveo.app/project/</span><span className="px-3 py-2.5 text-lavender2 text-sm font-mono">{item.slug}</span></div>
       </div>
       <div><label className="block text-sm font-semibold text-warm mb-1.5">Summary</label><textarea data-testid="edit-summary" value={summary} onChange={(e) => setSummary(e.target.value)} rows={3} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet" /></div>
-      <div>
-        <label className="block text-sm font-semibold text-warm mb-1.5">Icon</label>
-        <div className="flex items-center gap-4">
-          <div className="relative group">
-            <img src={icon} alt="" className="w-20 h-20 rounded-2xl border-2 border-plumborder bg-plum2 object-cover" />
-            <label className="absolute inset-0 bg-ink/60 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
-              <Upload className="w-6 h-6 text-warm" />
-              <input type="file" className="hidden" accept="image/*" onChange={handleIconUpload} />
-            </label>
-          </div>
-          <div className="text-sm text-lavender2/60">
-            <p>Click the image to upload a new icon.</p>
-            <p className="text-xs mt-1">1:1 aspect ratio recommended.</p>
+      {item.category !== "skins" && (
+        <div>
+          <label className="block text-sm font-semibold text-warm mb-1.5">Icon</label>
+          <div className="flex items-center gap-4">
+            <div className="relative group">
+              <img src={icon} alt="" className="w-20 h-20 rounded-2xl border-2 border-plumborder bg-plum2 object-cover" />
+              <label className="absolute inset-0 bg-ink/60 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity">
+                <Upload className="w-6 h-6 text-warm" />
+                <input type="file" className="hidden" accept="image/*" onChange={handleIconUpload} />
+              </label>
+            </div>
+            <div className="text-sm text-lavender2/60">
+              <p>Click the image to upload a new icon.</p>
+              <p className="text-xs mt-1">1:1 aspect ratio recommended.</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <div>
         <label className="block text-sm font-semibold text-warm mb-1.5">Visibility</label>
         <select data-testid="edit-visibility" value={visibility} onChange={(e) => setVisibility(e.target.value)} className="w-full bg-ink border border-plumborder rounded-lg px-3 py-2.5 text-warm text-sm focus:outline-none focus:ring-2 focus:ring-violet">{VIS.map((v) => <option key={v} value={v}>{v[0].toUpperCase() + v.slice(1)}</option>)}</select>
@@ -212,6 +215,44 @@ function GallerySec({ item, onDone }) {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
         {(item.gallery || []).map((g, i) => <img key={i} src={g.startsWith("http") ? g : `${API.replace("/api", "")}${g}`} alt="" className="rounded-xl border border-plumborder w-full aspect-video object-cover" />)}
         {(item.gallery || []).length === 0 && <p className="text-lavender2/40 font-mono col-span-full py-8 text-center">No images yet.</p>}
+      </div>
+    </div>
+  );
+}
+
+function SkinFileSec({ item, onDone }) {
+  const [busy, setBusy] = useState(false);
+  
+  const handleSkinUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !file.name.endsWith('.png')) {
+      toast.error('Only PNG skins are supported');
+      return;
+    }
+    setBusy(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      await api.post(`/creator/skins/${item.id}/file`, fd);
+      toast.success("Skin file updated");
+      onDone();
+    } catch (err) {
+      toast.error(apiError(err.response?.data?.detail));
+    }
+    setBusy(false);
+  };
+  
+  return (
+    <div className="space-y-6">
+      <h2 className="font-heading font-bold text-warm text-lg">Update Skin File</h2>
+      <div className="p-6 bg-ink border border-plumborder rounded-xl flex flex-col items-center">
+        <Upload className="w-10 h-10 text-lavender2/50 mb-3" />
+        <p className="text-warm font-semibold mb-1">Upload new PNG</p>
+        <p className="text-lavender2/70 text-sm mb-4">Must be 64x64 or 64x32 pixels.</p>
+        <label className="relative overflow-hidden cursor-pointer bg-violet hover:bg-violet/80 text-warm font-semibold px-4 py-2 rounded-lg transition-colors">
+          {busy ? "Uploading..." : "Select File"}
+          <input type="file" className="hidden" accept=".png" disabled={busy} onChange={handleSkinUpload} />
+        </label>
       </div>
     </div>
   );
