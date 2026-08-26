@@ -2608,9 +2608,20 @@ async def catch_all(full_path: str):
         slug = parts[1]
         mod = await db.mods.find_one({"slug": slug, "status": "approved"})
         if mod:
-            title = f"{mod['title']} — {cat.capitalize()} for Minecraft | QIVEO.dev"
-            desc = mod.get("summary", "")[:150]
-            icon = mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+            if cat == "skins":
+                title = f"{mod['title']} by {mod['author_name']} — Minecraft Skin | QIVEO.dev"
+                desc = mod.get("summary") or f"Download the {mod['title']} Minecraft skin created by {mod['author_name']} on Qiveo."
+                # Prefer the raw skin texture if the icon is blank/broken
+                raw_img = mod.get("gallery", [])[0] if mod.get("gallery") else None
+                icon = raw_img or mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+            else:
+                title = f"{mod['title']} — {cat.capitalize()} for Minecraft | QIVEO.dev"
+                desc = mod.get("summary", "")[:150] or f"Download {mod['title']} on Qiveo."
+                icon = mod.get("icon", "https://qiveo.dev/qiveo-logo-nobg-.png")
+                
+            if icon.startswith("/"):
+                icon = f"https://qiveo.dev{icon.replace('/api', '/api')}" # Ensure no double prefix
+                
             url = f"https://qiveo.dev/{cat}/{slug}"
             seo_tags = f'''
             <title>{title}</title>
