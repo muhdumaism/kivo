@@ -1413,6 +1413,35 @@ async def upload_version(
     return {k: v for k, v in version.items() if k != "_id"}
 
 
+@api.get("/skins/{mod_id}/download")
+async def register_skin_download(mod_id: str, request: Request):
+    mod = await db.mods.find_one({"id": mod_id})
+    if not mod or mod.get("category") != "skins":
+        raise HTTPException(status_code=404)
+        
+    ip = get_client_ip(request)
+    day = datetime.now(timezone.utc).strftime("%m/%d")
+    
+    existing = await db.download_events.find_one({
+        "mod_id": mod_id,
+        "ip": ip
+    })
+    
+    if not existing:
+        await db.mods.update_one({"id": mod_id}, {"$inc": {"downloads": 1}})
+        await db.download_events.insert_one({
+            "id": str(uuid.uuid4()), "author_id": mod.get("author_id"),
+            "mod_id": mod_id, "version_id": None, "ip": ip, "day": day, "ts": now_iso()
+        })
+        await manager.broadcast({
+            "type": "downloads_updated",
+            "mod_id": mod_id,
+            "downloads": mod.get("downloads", 0) + 1
+        })
+        return {"status": "ok", "downloads": mod.get("downloads", 0) + 1}
+    
+    return {"status": "ignored", "downloads": mod.get("downloads", 0)}
+
 @api.get("/download/{version_id}")
 async def download(version_id: str):
     version = await db.versions.find_one({"id": version_id})
@@ -2229,6 +2258,19 @@ async def get_minecraft_profile(identifier: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Minecraft profile service is temporarily unavailable.")
+
+@api.get("/minecraft/download/{texture_id}")
+async def download_minecraft_texture(texture_id: str, username: str = "skin"):
+    url = f"http://textures.minecraft.net/texture/{texture_id}"
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
+        if resp.status_code == 200:
+            return Response(
+                content=resp.content, 
+                media_type="image/png",
+                headers={"Content-Disposition": f'attachment; filename="{username}_skin.png"'}
+            )
+    raise HTTPException(status_code=404)
 
 @api.post("/creator/skins/publish")
 async def publish_skin(

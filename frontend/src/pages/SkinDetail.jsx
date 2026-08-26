@@ -67,7 +67,7 @@ export default function SkinDetail() {
     document.body.removeChild(a);
     
     // Attempt to ping download analytics
-    api.get(`/download/${skin.id}`).catch(() => {});
+    api.get(`/skins/${skin.id}/download`).catch(() => {});
     toast.success('Skin download started');
   };
 

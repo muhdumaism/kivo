@@ -55,9 +55,10 @@ export default function PlayerProfile() {
 
   const downloadSkin = () => {
     if (!profile?.skin?.url) return;
+    const parts = profile.skin.url.split('/');
+    const textureId = parts[parts.length - 1];
     const a = document.createElement('a');
-    a.href = profile.skin.url;
-    a.download = `${profile.username}_skin.png`;
+    a.href = `${api.defaults.baseURL}/minecraft/download/${textureId}?username=${encodeURIComponent(profile.username)}`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
