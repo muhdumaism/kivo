@@ -1,17 +1,34 @@
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { useState } from "react";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LayoutDashboard, ClipboardCheck, Flag, Users, ScrollText, Activity, Box, ArrowLeft, Newspaper, Mail, Shield } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Flag, Users, ScrollText, Activity, Shield, Newspaper, Mail, ArrowLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { AdminSidebar } from "@/components/qiveo/AdminSidebar";
 
-const NAV = [
-  ["/admin", "Overview", LayoutDashboard, true],
-  ["/admin/queue", "Review Queue", ClipboardCheck],
-  ["/admin/mods", "Mod Moderation", Shield],
-  ["/admin/reports", "Reports & Abuse", Flag],
-  ["/admin/users", "Users & Trust", Users],
-  ["/admin/news", "Publish News", Newspaper],
-  ["/admin/contact", "Contact Inquiries", Mail],
-  ["/admin/audit", "Audit Log", ScrollText],
-  ["/admin/anomalies", "Anomalies", Activity],
+const NAV_GROUPS = [
+  {
+    heading: 'Dashboard',
+    items: [
+      { id: '/admin', title: 'Overview', icon: LayoutDashboard },
+      { id: '/admin/anomalies', title: 'Anomalies', icon: Activity },
+    ]
+  },
+  {
+    heading: 'Moderation',
+    items: [
+      { id: '/admin/queue', title: 'Review Queue', icon: ClipboardCheck },
+      { id: '/admin/mods', title: 'Mod Moderation', icon: Shield },
+      { id: '/admin/reports', title: 'Reports & Abuse', icon: Flag },
+    ]
+  },
+  {
+    heading: 'System',
+    items: [
+      { id: '/admin/users', title: 'Users & Trust', icon: Users },
+      { id: '/admin/news', title: 'Publish News', icon: Newspaper },
+      { id: '/admin/contact', title: 'Contact Inquiries', icon: Mail },
+      { id: '/admin/audit', title: 'Audit Log', icon: ScrollText },
+    ]
+  }
 ];
 
 const PERMS = {
@@ -24,38 +41,61 @@ const PERMS = {
 
 export default function AdminLayout() {
   const { user } = useAuth();
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(true);
+
   const allowed = PERMS[user?.role] || ["/admin"];
-  const nav = NAV.filter(([to]) => allowed.includes(to));
+  
+  const navGroups = NAV_GROUPS.map(group => ({
+    ...group,
+    items: group.items.filter(item => allowed.includes(item.id))
+  })).filter(group => group.items.length > 0);
+
+  const activeItem = NAV_GROUPS.flatMap(g => g.items).find(i => i.id === location.pathname);
+  const activeTitle = activeItem ? activeItem.title : "Dashboard";
+
   return (
-    <div className="min-h-screen bg-transparent flex">
-      <aside className="w-60 shrink-0 bg-slate border-r border-slate-light flex flex-col sticky top-0 h-screen">
-        <div className="p-5 border-b border-slate-light">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-rust grid place-items-center"><Box className="w-4 h-4 text-warm" /></div>
-            <div>
-              <p className="font-heading font-black text-warm leading-none">QIVEO</p>
-              <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-rust">staff panel</p>
-            </div>
-          </Link>
+    <div className="flex flex-col min-h-screen bg-[#000000] font-sans">
+      <div className="flex h-screen w-full bg-[#000000] overflow-hidden">
+        
+        <div 
+          className={`h-full transition-all duration-300 ease-in-out shrink-0 overflow-hidden bg-[#000000] border-r-2 border-[#92400E] ${
+            isOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0 border-none'
+          }`}
+        >
+          <AdminSidebar navGroups={navGroups} user={user} className="w-[260px] border-none" />
         </div>
-        <nav className="flex-1 p-3 space-y-1">
-          {nav.map(([to, label, Icon, end]) => (
-            <NavLink key={to} to={to} end={end} data-testid={`admin-nav-${label.toLowerCase().split(" ")[0]}`}
-              className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 font-mono text-xs uppercase tracking-wide transition-colors ${isActive ? "bg-charcoal text-amber border-l-2 border-amber" : "text-warm/60 hover:text-warm border-l-2 border-transparent"}`}>
-              <Icon className="w-4 h-4" />{label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="p-4 border-t border-slate-light">
-          <p className="font-mono text-[10px] text-warm/40 uppercase tracking-widest">{user?.name}</p>
-          <p className="font-mono text-[10px] text-rust uppercase tracking-widest mt-0.5">{user?.role}</p>
-          <Link to="/" className="flex items-center gap-1.5 mt-3 font-mono text-[10px] uppercase tracking-widest text-warm/50 hover:text-amber"><ArrowLeft className="w-3 h-3" />Exit to site</Link>
+        
+        <div className="flex-1 bg-[#24201A]/30 flex flex-col min-w-0 transition-all duration-300 relative grain">
+           <div className="absolute inset-0 scanlines opacity-[0.15] pointer-events-none z-0" />
+           
+           <div className="h-16 border-b-2 border-[#92400E] flex items-center px-4 sm:px-6 justify-between bg-[#000000]/80 backdrop-blur-sm shrink-0 z-10 relative">
+             <div className="flex items-center gap-4">
+               <button 
+                 onClick={() => setIsOpen(!isOpen)}
+                 className="p-1.5 rounded-md text-[#FFF8E1]/60 hover:bg-[#24201A] hover:text-[#FFF8E1] transition-colors"
+               >
+                 {isOpen ? <PanelLeftClose className="w-[20px] h-[20px]" strokeWidth={1.5} /> : <PanelLeftOpen className="w-[20px] h-[20px]" strokeWidth={1.5} />}
+               </button>
+               <div className="flex items-center gap-2.5 text-[11px] sm:text-sm text-[#FFF8E1]/60 font-mono uppercase tracking-widest">
+                 <span className="truncate hidden sm:inline-block">Staff Panel</span>
+                 <span className="text-[#92400E] hidden sm:inline-block">/</span>
+                 <span className="font-bold text-[#F5C542] truncate">{activeTitle}</span>
+               </div>
+             </div>
+             
+             <div className="flex items-center gap-3">
+               <Link to="/" className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-[#FFF8E1]/50 hover:text-[#F5C542] transition-colors">
+                  <ArrowLeft className="w-3 h-3" /> <span className="hidden sm:inline-block">Exit to site</span>
+               </Link>
+             </div>
+           </div>
+
+           <div className="flex-1 overflow-y-auto relative z-10 p-6 lg:p-8">
+             <Outlet />
+           </div>
         </div>
-      </aside>
-      <main className="flex-1 min-w-0 relative grain">
-        <div className="absolute inset-0 scanlines opacity-[0.15] pointer-events-none" />
-        <div className="relative p-6 lg:p-8"><Outlet /></div>
-      </main>
+      </div>
     </div>
   );
 }
