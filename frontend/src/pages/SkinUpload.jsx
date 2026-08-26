@@ -4,6 +4,8 @@ import api from '@/lib/api';
 import { toast } from 'sonner';
 import { UploadCloud, Check, X, RefreshCw } from 'lucide-react';
 import { SkinViewer } from 'skinview3d';
+import { Navbar } from '@/components/qiveo/Navbar';
+import { Footer } from '@/components/qiveo/Footer';
 
 export default function SkinUpload() {
   const [file, setFile] = useState(null);
@@ -88,7 +90,9 @@ export default function SkinUpload() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-transparent flex flex-col">
+      <Navbar />
+      <div className="flex-1 max-w-4xl mx-auto px-4 py-12 w-full">
       <h1 className="text-3xl font-heading font-black text-[#FFF8E1] mb-2 uppercase">Publish a Skin</h1>
       <p className="text-[#FFF8E1]/60 font-mono text-sm mb-8">Upload your masterpiece and share it with the Qiveo community.</p>
       
@@ -175,5 +179,7 @@ export default function SkinUpload() {
         </div>
       </div>
     </div>
+    <Footer />
+  </div>
   );
 }

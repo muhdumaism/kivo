@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 import { Search, Loader2 } from 'lucide-react';
 import SkinCard from '@/components/qiveo/SkinCard';
+import { Navbar } from '@/components/qiveo/Navbar';
+import { Footer } from '@/components/qiveo/Footer';
 
 export default function Skins() {
   const [query, setQuery] = useState('');
@@ -24,7 +26,9 @@ export default function Skins() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-transparent flex flex-col">
+      <Navbar />
+      <div className="flex-1 max-w-7xl mx-auto px-4 py-12 w-full">
       <div className="text-center max-w-2xl mx-auto mb-16">
         <h1 className="text-4xl sm:text-5xl font-heading font-black text-[#FFF8E1] uppercase tracking-tighter mb-4">Minecraft Skins</h1>
         <p className="text-[#FFF8E1]/60 font-mono mb-8">Search for any Minecraft player or discover custom skins created by the Qiveo community.</p>
@@ -69,5 +73,7 @@ export default function Skins() {
         )}
       </div>
     </div>
+    <Footer />
+  </div>
   );
 }
