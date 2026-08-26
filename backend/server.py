@@ -2235,8 +2235,8 @@ async def publish_skin(
     with open(thumb_path, "wb") as f:
         f.write(thumb_data)
         
-    skin_url = f"/api/uploads/gallery/{skin_id}_skin{skin_ext}"
-    thumb_url = f"/api/uploads/gallery/{skin_id}_thumb{thumb_ext}"
+    skin_url = f"/api/gallery/{skin_id}_skin{skin_ext}"
+    thumb_url = f"/api/gallery/{skin_id}_thumb{thumb_ext}"
     
     tgs = json.loads(tags) if tags else []
     
