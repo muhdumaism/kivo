@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import api, { API } from '@/lib/api';
 import { toast } from 'sonner';
-import { Download, Share2, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Download, Share2, AlertTriangle, ArrowLeft, Settings } from 'lucide-react';
 import { SkinViewer } from 'skinview3d';
 import { Navbar } from '@/components/qiveo/Navbar';
 import { Footer } from '@/components/qiveo/Footer';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SkinDetail() {
   const { slug } = useParams();
   const nav = useNavigate();
+  const { user } = useAuth();
   const [skin, setSkin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -110,9 +112,17 @@ export default function SkinDetail() {
     <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
       <div className="flex-1 max-w-4xl mx-auto px-4 py-12 w-full">
-        <button onClick={() => nav('/skins')} className="mb-6 inline-flex items-center gap-2 text-[#FFF8E1]/50 hover:text-[#FFF8E1] font-mono font-bold text-sm transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back to Skins
-        </button>
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={() => nav('/skins')} className="inline-flex items-center gap-2 text-[#FFF8E1]/50 hover:text-[#FFF8E1] font-mono font-bold text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back to Skins
+          </button>
+          
+          {user && (user.id === skin.author_id || user.role === 'admin' || user.role === 'staff') && (
+            <Link to={`/project/${slug}/edit`} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#24201A] border border-[#92400E] text-[#FFF8E1] text-xs font-mono font-bold hover:bg-[#92400E] transition-colors">
+              <Settings className="w-4 h-4" /> Edit Project
+            </Link>
+          )}
+        </div>
 
         <div className="bg-[#171512] border-2 border-[#92400E] rounded-3xl p-6 sm:p-10 shadow-[4px_4px_0px_0px_rgba(20,20,20,1)]">
           <div className="flex flex-col md:flex-row gap-8 items-center">
