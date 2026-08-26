@@ -35,11 +35,11 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden lg:flex items-center justify-center gap-6 flex-1 max-w-xl mx-auto">
-            <Link to="/browse" data-letters="Browse" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">Browse</Link>
-            <Link to="/skins" data-letters="Skins" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">Skins</Link>
-            <Link to="/news" data-letters="News" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">News</Link>
-            <Link to="/about" data-letters="About" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">About</Link>
-            <Link to="/contact" data-letters="Contact" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">Contact</Link>
+            <Link to="/browse" className="nav-link-cool text-sm font-heading font-extrabold">Browse</Link>
+            <Link to="/skins" className="nav-link-cool text-sm font-heading font-extrabold">Skins</Link>
+            <Link to="/news" className="nav-link-cool text-sm font-heading font-extrabold">News</Link>
+            <Link to="/about" className="nav-link-cool text-sm font-heading font-extrabold">About</Link>
+            <Link to="/contact" className="nav-link-cool text-sm font-heading font-extrabold">Contact</Link>
           </nav>
 
           <div className="flex items-center gap-3">
