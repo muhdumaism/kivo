@@ -2120,7 +2120,173 @@ async def delete_news_article(news_id: str, user: dict = Depends(require_staff("
     return {"status": "deleted"}
 
 
+
+import struct
+import base64
+import json
+import time
+
+def get_png_dimensions(data: bytes):
+    if data.startswith(b'\x89PNG\r\n\x1a\n') and len(data) >= 24:
+        w, h = struct.unpack('>LL', data[16:24])
+        return w, h
+    return None
+
+mojang_cache = {}
+
+@api.get("/minecraft/profile/{identifier}")
+async def get_minecraft_profile(identifier: str):
+    now = time.time()
+    if identifier in mojang_cache and now - mojang_cache[identifier]['time'] < 600:
+        return mojang_cache[identifier]['data']
+        
+    try:
+        if len(identifier) == 32 or len(identifier) == 36:
+            uuid_val = identifier.replace('-', '')
+        else:
+            r1 = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{identifier}", timeout=5)
+            if r1.status_code != 200:
+                raise HTTPException(status_code=404, detail="Minecraft player not found.")
+            uuid_val = r1.json()['id']
+            
+        r2 = requests.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid_val}", timeout=5)
+        if r2.status_code != 200:
+            raise HTTPException(status_code=404, detail="Profile not found.")
+            
+        data = r2.json()
+        props = data.get('properties', [])
+        texture_val = None
+        for p in props:
+            if p['name'] == 'textures':
+                texture_val = p['value']
+                break
+                
+        if not texture_val:
+            raise HTTPException(status_code=404, detail="This player does not currently have a retrievable skin.")
+            
+        decoded = json.loads(base64.b64decode(texture_val).decode('utf-8'))
+        
+        textures = decoded.get('textures', {})
+        skin_info = textures.get('SKIN', {})
+        cape_info = textures.get('CAPE', {})
+        
+        result = {
+            'username': data.get('name'),
+            'uuid': data.get('id'),
+            'skin': {
+                'url': skin_info.get('url'),
+                'model': skin_info.get('metadata', {}).get('model', 'classic')
+            },
+            'cape': {
+                'url': cape_info.get('url')
+            } if cape_info.get('url') else None
+        }
+        
+        mojang_cache[identifier] = {'time': now, 'data': result}
+        mojang_cache[data.get('id')] = {'time': now, 'data': result}
+        mojang_cache[data.get('name')] = {'time': now, 'data': result}
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Minecraft profile service is temporarily unavailable.")
+
+@api.post("/creator/skins/publish")
+async def publish_skin(
+    request: Request,
+    user=Depends(get_current_user),
+    skin: UploadFile = File(...),
+    thumbnail: UploadFile = File(...),
+    title: str = Form(...),
+    summary: str = Form(""),
+    tags: str = Form("[]"),
+    skin_model: str = Form("classic"),
+    visibility: str = Form("public")
+):
+    skin_data = await skin.read()
+    if not skin.filename.endswith('.png'):
+        raise HTTPException(status_code=400, detail="Skin must be a PNG file.")
+        
+    dims = get_png_dimensions(skin_data)
+    if not dims:
+        raise HTTPException(status_code=400, detail="Invalid PNG file.")
+    if dims not in [(64, 64), (64, 32)]:
+        raise HTTPException(status_code=400, detail=f"Skin must be 64x64 or 64x32.")
+        
+    thumb_data = await thumbnail.read()
+    
+    skin_id = secrets.token_hex(8)
+    mod_id = f"mod_{skin_id}"
+    slug_val = re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')
+    slug = f"{slug_val}-{skin_id}"
+    
+    skin_ext = ".png"
+    gdir = UPLOAD_DIR / "gallery"
+    gdir.mkdir(parents=True, exist_ok=True)
+    skin_path = gdir / f"{skin_id}_skin{skin_ext}"
+    with open(skin_path, "wb") as f:
+        f.write(skin_data)
+        
+    thumb_ext = ".png"
+    thumb_path = gdir / f"{skin_id}_thumb{thumb_ext}"
+    with open(thumb_path, "wb") as f:
+        f.write(thumb_data)
+        
+    skin_url = f"/api/uploads/gallery/{skin_id}_skin{skin_ext}"
+    thumb_url = f"/api/uploads/gallery/{skin_id}_thumb{thumb_ext}"
+    
+    tgs = json.loads(tags) if tags else []
+    
+    trusted = user.get('trust_tier') == 'verified' or user.get('verified_creator')
+    status = 'approved' if trusted else 'draft'
+    
+    mod = {
+        "id": mod_id,
+        "slug": slug,
+        "title": title,
+        "summary": summary[:300],
+        "description": summary,
+        "game_slug": "minecraft",
+        "game_name": "Minecraft",
+        "author_id": user['id'],
+        "author_name": user['name'],
+        "author_verified": bool(user.get('verified_creator')),
+        "rarity": "Common",
+        "pricing": "free",
+        "price": 0,
+        "visibility": visibility if visibility in ("public", "unlisted", "private") else "public",
+        "monetization": False,
+        "org_id": None,
+        "follows": 0,
+        "favorites_count": 0,
+        "category": "skins",
+        "tags": tgs[:8],
+        "mod_loaders": [],
+        "game_versions": [],
+        "license": "MIT",
+        "gallery": [skin_url],
+        "icon": thumb_url,
+        "status": status,
+        "staff_pick": False,
+        "downloads": 0,
+        "rating_avg": 0,
+        "rating_count": 0,
+        "base_rating_sum": 0,
+        "base_rating_count": 0,
+        "review_reason": "",
+        "created_at": now_iso(),
+        "updated_at": now_iso(),
+    }
+    
+    mod['tags'].extend([f"model:{skin_model}", f"width:{dims[0]}", f"height:{dims[1]}"])
+    
+    await db.mods.insert_one(mod)
+    await audit(user, "create_mod", "mod", mod["id"], after={"status": status})
+    return {"status": status, "slug": slug}
+
 @api.post("/contact")
+
 async def submit_contact_form(payload: dict):
     name = (payload.get("name") or "").strip()
     email = (payload.get("email") or "").strip()

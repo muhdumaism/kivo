@@ -1,5 +1,6 @@
 export const GAME_CATEGORIES = {
   minecraft: [
+    { id: "skins", name: "Skins" },
     { id: "plugins", name: "Plugins" },
     { id: "server-setups", name: "Server setups" },
     { id: "builds", name: "Builds" },

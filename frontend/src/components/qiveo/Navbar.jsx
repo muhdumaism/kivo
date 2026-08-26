@@ -36,6 +36,7 @@ export function Navbar() {
 
           <nav className="hidden lg:flex items-center justify-center gap-6 flex-1 max-w-xl mx-auto">
             <Link to="/browse" data-letters="Browse" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">Browse</Link>
+            <Link to="/skins" data-letters="Skins" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">Skins</Link>
             <Link to="/news" data-letters="News" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">News</Link>
             <Link to="/about" data-letters="About" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">About</Link>
             <Link to="/contact" data-letters="Contact" className="link--kukuri text-sm font-heading font-extrabold text-[#FFF8E1]">Contact</Link>
@@ -59,6 +60,7 @@ export function Navbar() {
         {mobile && (
           <div className="lg:hidden border-b-2 border-[#92400E] bg-[#171512] px-4 py-3 space-y-1">
             <Link to="/browse" data-testid="mnav-discover" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Discover content</Link>
+            <Link to="/skins" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Skins</Link>
             <Link to="/browse" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Host a server</Link>
             {user ? (
               <>

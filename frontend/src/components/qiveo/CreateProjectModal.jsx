@@ -28,6 +28,12 @@ export function CreateProjectModal({ onClose }) {
   const onName = (v) => { set("name", v); if (!slugEdited) set("slug", slugify(v)); };
 
   const create = async () => {
+    if (form.category === "skins") {
+      onClose();
+      nav("/project/create-skin");
+      return;
+    }
+    
     if (!form.name.trim()) return toast.error("Name is required");
     setBusy(true);
     try {
@@ -98,7 +104,7 @@ export function CreateProjectModal({ onClose }) {
         </div>
         <div className="flex justify-end gap-3 p-6 border-t border-[#92400E]/50 bg-[#171512]/30">
           <button data-testid="cp-cancel" onClick={onClose} className="px-5 py-2.5 rounded-full text-sm font-bold text-[#FFF8E1]/60 hover:text-[#FFF8E1] hover:bg-[#24201A] transition-colors">Cancel</button>
-          <button data-testid="cp-create" onClick={create} disabled={busy} className="px-6 py-2.5 rounded-full bg-[#F5C542] text-[#171512] text-sm font-bold hover:bg-[#FFD84D] transition-colors disabled:opacity-50">{busy ? "Creating..." : "Create project"}</button>
+          <button data-testid="cp-create" onClick={create} disabled={busy} className="px-6 py-2.5 rounded-full bg-[#F5C542] text-[#171512] text-sm font-bold hover:bg-[#FFD84D] transition-colors disabled:opacity-50">{busy ? "Creating..." : (form.category === "skins" ? "Continue to Upload" : "Create project")}</button>
         </div>
       </div>
     </div>

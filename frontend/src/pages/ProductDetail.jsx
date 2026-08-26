@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api, { API, apiError } from "@/lib/api";
 import { useAuth, isStaff } from "@/context/AuthContext";
@@ -12,6 +12,7 @@ import {
   Download, Heart, Bookmark, Settings, Crown, Scale, CalendarDays,
   RefreshCw, Flag, Star, Send, MessageSquare, Layers, Bell, Tag, Sparkles
 } from "lucide-react";
+import { SkinViewer } from "skinview3d";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -238,7 +239,40 @@ const Detail = ({ icon: Icon, label, value }) => (
   </div>
 );
 
+function SkinViewerWrapper({ skinUrl, modelType }) {
+  const viewerRef = useRef(null);
+  useEffect(() => {
+    if (viewerRef.current) {
+      const viewer = new SkinViewer({
+        canvas: viewerRef.current,
+        width: 300,
+        height: 400,
+        skin: skinUrl,
+        model: modelType
+      });
+      viewer.autoRotate = true;
+      viewer.autoRotateSpeed = 0.5;
+      return () => viewer.dispose();
+    }
+  }, [skinUrl, modelType]);
+  return <div className="flex justify-center bg-[#24201A] rounded-2xl border-2 border-[#92400E] py-8 shadow-[2px_2px_0px_0px_rgba(20,20,20,1)]"><canvas ref={viewerRef} /></div>;
+}
+
 function Gallery({ item }) {
+  if (item.category === "skins") {
+    const skinUrl = item.gallery?.[0];
+    if (!skinUrl) return <p className="text-[#FFF8E1]/40 font-mono font-bold">Skin file not available.</p>;
+    const fullUrl = skinUrl.startsWith("http") ? skinUrl : `${API.replace("/api", "")}${skinUrl}`;
+    
+    let modelType = "classic";
+    if (item.tags) {
+      const modelTag = item.tags.find(t => t.startsWith("model:"));
+      if (modelTag) modelType = modelTag.split(":")[1];
+    }
+    
+    return <SkinViewerWrapper skinUrl={fullUrl} modelType={modelType} />;
+  }
+
   const imgs = item.gallery || [];
   if (!imgs.length) return <p className="text-[#FFF8E1]/40 font-mono font-bold">No gallery images yet.</p>;
   return <div className="grid grid-cols-2 gap-4">{imgs.map((g, i) => <img loading="lazy" key={i} src={g.startsWith("http") ? g : `${API.replace("/api", "")}${g}`} alt="" className="rounded-2xl border-2 border-[#92400E] w-full object-cover shadow-[2px_2px_0px_0px_rgba(20,20,20,1)] aspect-video" />)}</div>;
