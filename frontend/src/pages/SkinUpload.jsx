@@ -31,7 +31,8 @@ export default function SkinUpload() {
         width: 300,
         height: 400,
         skin: previewUrl,
-        model: skinModel
+        model: skinModel,
+        preserveDrawingBuffer: true
       });
       skinViewerInstance.current.autoRotate = true;
       skinViewerInstance.current.autoRotateSpeed = 0.5;
@@ -60,8 +61,6 @@ export default function SkinUpload() {
       // Create thumbnail from 3D canvas
       let thumbBlob = null;
       if (viewerRef.current && skinViewerInstance.current) {
-        // Force render immediately before capture to avoid blank WebGL canvas (preserveDrawingBuffer issue)
-        skinViewerInstance.current.renderer.render(skinViewerInstance.current.scene, skinViewerInstance.current.camera);
         const dataUrl = viewerRef.current.toDataURL('image/png');
         thumbBlob = await (await fetch(dataUrl)).blob();
       } else {
