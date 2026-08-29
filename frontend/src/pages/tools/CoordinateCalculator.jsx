@@ -30,7 +30,7 @@ export default function CoordinateCalculator() {
   const distanceToOrigin = Math.sqrt(parsedX * parsedX + parsedY * parsedY + parsedZ * parsedZ).toFixed(2);
 
   return (
-    <div className="min-h-screen bg-[#171512] flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-16 w-full">
         

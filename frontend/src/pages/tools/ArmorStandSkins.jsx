@@ -117,7 +117,7 @@ export default function ArmorStandSkins() {
   };
 
   return (
-    <div className="min-h-screen bg-[#171512] flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       <Navbar />
       <main className="flex-1 max-w-6xl mx-auto px-4 py-16 w-full">
         
