@@ -2695,7 +2695,8 @@ async def generate_robots():
     return Response(content=text, media_type="text/plain")
 
 @app.get("/{full_path:path}")
-async def catch_all(full_path: str):
+async def catch_all(request: Request, full_path: str):
+    base_url = str(request.base_url).rstrip("/")
     file_path = FRONTEND_BUILD_DIR / full_path
     if full_path and file_path.is_file() and file_path.name != "index.html":
         return FileResponse(file_path)
@@ -2718,16 +2719,18 @@ async def catch_all(full_path: str):
             if cat == "skins":
                 title = f"{mod['title']} by {mod['author_name']} — Minecraft Skin | QIVEO.dev"
                 desc = mod.get("summary") or f"Download the {mod['title']} Minecraft skin created by {mod['author_name']} on Qiveo."
-                icon = mod.get("icon") or (mod.get("gallery")[0] if mod.get("gallery") else None) or "https://qiveo.dev/qiveo-logo-nobg-.png"
+                icon = mod.get("icon") or (mod.get("gallery")[0] if mod.get("gallery") else None) or f"{base_url}/qiveo-logo-nobg-.png"
             else:
                 title = f"{mod['title']} — {cat.capitalize()} for Minecraft | QIVEO.dev"
                 desc = mod.get("summary", "")[:150] or f"Download {mod['title']} on Qiveo."
-                icon = mod.get("icon") or "https://qiveo.dev/qiveo-logo-nobg-.png"
+                icon = mod.get("icon") or f"{base_url}/qiveo-logo-nobg-.png"
                 
             if icon.startswith("/"):
-                icon = f"https://qiveo.dev{icon.replace('/api', '/api')}" # Ensure no double prefix
+                icon = f"{base_url}{icon.replace('/api', '/api')}" # Ensure no double prefix
+            elif not icon.startswith("http"):
+                icon = f"{base_url}/{icon}"
                 
-            url = f"https://qiveo.dev/{cat}/{slug}"
+            url = f"{base_url}/{cat}/{slug}"
             seo_tags = f'''
             <title>{title}</title>
             <meta name="description" content="{desc}">
@@ -2738,7 +2741,7 @@ async def catch_all(full_path: str):
             <meta property="og:url" content="{url}">
             <meta property="og:image" content="{icon}">
             <meta property="og:site_name" content="QIVEO.dev">
-            <meta name="twitter:card" content="summary">
+            <meta name="twitter:card" content="summary_large_image">
             <meta name="twitter:title" content="{mod['title']} — {cat.capitalize()} for Minecraft">
             <meta name="twitter:description" content="{desc}">
             <meta name="twitter:image" content="{icon}">
@@ -2763,8 +2766,8 @@ async def catch_all(full_path: str):
                 "@context": "https://schema.org",
                 "@type": "BreadcrumbList",
                 "itemListElement": [
-                    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://qiveo.dev/"},
-                    {"@type": "ListItem", "position": 2, "name": cat.capitalize(), "item": f"https://qiveo.dev/browse"},
+                    {"@type": "ListItem", "position": 1, "name": "Home", "item": f"{base_url}/"},
+                    {"@type": "ListItem", "position": 2, "name": cat.capitalize(), "item": f"{base_url}/browse"},
                     {"@type": "ListItem", "position": 3, "name": mod["title"], "item": url}
                 ]
             }
@@ -2779,19 +2782,19 @@ async def catch_all(full_path: str):
         seo_tags = f'''
         <title>{title}</title>
         <meta name="description" content="{desc}">
-        <link rel="canonical" href="https://qiveo.dev/">
+        <link rel="canonical" href="{base_url}/">
         <meta property="og:title" content="{title}">
         <meta property="og:description" content="{desc}">
-        <meta property="og:image" content="https://qiveo.dev/qiveo-logo-nobg-.png">
+        <meta property="og:image" content="{base_url}/qiveo-logo-nobg-.png">
         '''
         json_ld = {
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "QIVEO.dev",
-            "url": "https://qiveo.dev/",
+            "url": f"{base_url}/",
             "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://qiveo.dev/browse?search={search_term_string}",
+                "target": f"{base_url}/browse?search={{search_term_string}}",
                 "query-input": "required name=search_term_string"
             }
         }
@@ -2799,8 +2802,8 @@ async def catch_all(full_path: str):
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "Qiveo Development",
-            "url": "https://qiveo.dev/",
-            "logo": "https://qiveo.dev/qiveo-logo-nobg-.png",
+            "url": f"{base_url}/",
+            "logo": f"{base_url}/qiveo-logo-nobg-.png",
             "sameAs": ["https://discord.gg/5cweav9rsu"]
         }
         seo_tags += f"\n<script type='application/ld+json'>\n{json.dumps(json_ld)}\n</script>"
@@ -2811,7 +2814,7 @@ async def catch_all(full_path: str):
         seo_tags = f'''
         <title>{title}</title>
         <meta name="description" content="{desc}">
-        <link rel="canonical" href="https://qiveo.dev/browse">
+        <link rel="canonical" href="{base_url}/browse">
         '''
     else:
         seo_tags = f"<title>QIVEO.dev</title>"
