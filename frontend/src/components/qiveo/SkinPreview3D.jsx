@@ -1,5 +1,5 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
-import { SkinViewer, OrbitControls } from 'skinview3d';
+import { SkinViewer } from 'skinview3d';
 
 /**
  * Reusable 3D Minecraft Skin/Cape Preview Component
@@ -48,6 +48,7 @@ export const SkinPreview3D = forwardRef(({
       skin: skinUrl || undefined,
       cape: capeUrl || undefined,
       model,
+      enableControls: controls,
       preserveDrawingBuffer: true
     });
 
@@ -56,10 +57,6 @@ export const SkinPreview3D = forwardRef(({
     if (autoRotate) {
       viewer.autoRotate = true;
       viewer.autoRotateSpeed = 0.5;
-    }
-
-    if (controls) {
-      new OrbitControls(viewer);
     }
 
     if (onReady) {
