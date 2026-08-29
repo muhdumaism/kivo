@@ -2645,6 +2645,87 @@ async def seed():
             "resolution": "", "created_at": now_iso(),
         })
 
+# --- MINECRAFT PROXIES ---
+@api.get("/minecraft/versions")
+async def get_minecraft_versions():
+    try:
+        res = requests.get("https://launchermeta.mojang.com/mc/game/version_manifest.json", timeout=10)
+        if res.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to fetch Minecraft versions")
+        return res.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api.get("/minecraft/profile/{identifier}")
+async def get_minecraft_profile(identifier: str):
+    import base64
+    try:
+        uuid_str = identifier.replace("-", "")
+        if len(uuid_str) != 32:
+            res = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{identifier}", timeout=10)
+            if res.status_code != 200:
+                raise HTTPException(status_code=404, detail="Player not found")
+            data = res.json()
+            uuid_str = data.get("id")
+            if not uuid_str:
+                raise HTTPException(status_code=404, detail="Player not found")
+        
+        res = requests.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid_str}", timeout=10)
+        if res.status_code != 200:
+            raise HTTPException(status_code=404, detail="Profile not found")
+            
+        profile_data = res.json()
+        properties = profile_data.get("properties", [])
+        textures_base64 = next((p["value"] for p in properties if p["name"] == "textures"), None)
+        
+        if not textures_base64:
+            raise HTTPException(status_code=404, detail="No textures found for player")
+            
+        textures_data = json.loads(base64.b64decode(textures_base64).decode("utf-8"))
+        textures = textures_data.get("textures", {})
+        
+        skin = textures.get("SKIN")
+        cape = textures.get("CAPE")
+        
+        if not skin:
+            raise HTTPException(status_code=404, detail="Player has no skin")
+            
+        result = {
+            "uuid": profile_data.get("id"),
+            "username": profile_data.get("name"),
+            "skin": {
+                "url": skin.get("url"),
+                "model": skin.get("metadata", {}).get("model", "classic")
+            }
+        }
+        
+        if cape:
+            result["cape"] = {
+                "url": cape.get("url")
+            }
+            
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api.get("/minecraft/download/{texture_id}")
+async def download_minecraft_texture(texture_id: str, username: str = "skin"):
+    try:
+        res = requests.get(f"http://textures.minecraft.net/texture/{texture_id}", timeout=10)
+        if res.status_code != 200:
+            raise HTTPException(status_code=404, detail="Texture not found")
+            
+        return Response(
+            content=res.content, 
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f'attachment; filename="{username}.png"'
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.on_event("startup")
 async def on_startup():
