@@ -32,6 +32,25 @@ import AdminContact from "@/pages/admin/AdminContact";
 import AuditLog from "@/pages/admin/AuditLog";
 import Anomaly from "@/pages/admin/Anomaly";
 
+// Tools Hub & Pages
+import ToolsHub from "@/pages/tools/ToolsHub";
+import CustomPaintings from "@/pages/tools/CustomPaintings";
+import MusicDiscMaker from "@/pages/tools/MusicDiscMaker";
+import ArmorStandSkins from "@/pages/tools/ArmorStandSkins";
+import PlayerHeads from "@/pages/tools/PlayerHeads";
+import TotemGenerator from "@/pages/tools/TotemGenerator";
+import CapePackBuilder from "@/pages/tools/CapePackBuilder";
+import AvatarMaker from "@/pages/tools/AvatarMaker";
+import HudCustomizer from "@/pages/tools/HudCustomizer";
+import SkinPackMaker from "@/pages/tools/SkinPackMaker";
+import TexturePackMerger from "@/pages/tools/TexturePackMerger";
+import PackConverter from "@/pages/tools/PackConverter";
+import CoordinateCalculator from "@/pages/tools/CoordinateCalculator";
+import ColorCodeMaker from "@/pages/tools/ColorCodeMaker";
+import SkinEditor from "@/pages/tools/SkinEditor";
+import CustomEmojis from "@/pages/tools/CustomEmojis";
+import CapeEditor from "@/pages/tools/CapeEditor";
+
 function Gate({ children, staff }) {
   const { user, ready } = useAuth();
   if (!ready) return <div className="min-h-screen bg-[#171512] grid place-items-center"><span className="font-pixel text-[#FFF8E1]/50 text-xl animate-pulse">loading qiveo...</span></div>;
@@ -61,6 +80,26 @@ function App() {
             <Route path="/skins" element={<Skins />} />
             <Route path="/skins/player/:id" element={<PlayerProfile />} />
             <Route path="/skins/:slug" element={<SkinDetail />} />
+
+            {/* Tools Hub & Pages */}
+            <Route path="/tools" element={<ToolsHub />} />
+            <Route path="/create/custom-paintings" element={<CustomPaintings />} />
+            <Route path="/create/music-disc-maker" element={<MusicDiscMaker />} />
+            <Route path="/create/armor-stand-skins" element={<ArmorStandSkins />} />
+            <Route path="/create/player-heads" element={<PlayerHeads />} />
+            <Route path="/create/totem-generator" element={<TotemGenerator />} />
+            <Route path="/create/cape-pack-builder" element={<CapePackBuilder />} />
+            <Route path="/create/avatar-maker" element={<AvatarMaker />} />
+            <Route path="/create/hud-customizer" element={<HudCustomizer />} />
+            
+            <Route path="/tools/skin-pack-maker" element={<SkinPackMaker />} />
+            <Route path="/tools/texture-pack-merger" element={<TexturePackMerger />} />
+            <Route path="/tools/pack-converter" element={<PackConverter />} />
+            <Route path="/tools/coordinate-calculator" element={<CoordinateCalculator />} />
+            <Route path="/tools/color-code-maker" element={<ColorCodeMaker />} />
+            <Route path="/tools/skin-editor" element={<SkinEditor />} />
+            <Route path="/tools/custom-emojis" element={<CustomEmojis />} />
+            <Route path="/tools/cape-editor" element={<CapeEditor />} />
             <Route path="/profile" element={<Gate><Profile /></Gate>} />
             <Route path="/collections" element={<Gate><Collections /></Gate>} />
             <Route path="/project/:slug/edit" element={<Gate><ProjectEdit /></Gate>} />

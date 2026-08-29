@@ -2208,56 +2208,83 @@ async def get_minecraft_profile(identifier: str):
         return mojang_cache[identifier]['data']
         
     try:
-        if len(identifier) == 32 or len(identifier) == 36:
-            uuid_val = identifier.replace('-', '')
-        else:
-            r1 = requests.get(f"https://api.mojang.com/users/profiles/minecraft/{identifier}", timeout=5)
-            if r1.status_code != 200:
-                raise HTTPException(status_code=404, detail="Minecraft player not found.")
-            uuid_val = r1.json()['id']
-            
-        r2 = requests.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid_val}", timeout=5)
-        if r2.status_code != 200:
-            raise HTTPException(status_code=404, detail="Profile not found.")
-            
-        data = r2.json()
-        props = data.get('properties', [])
-        texture_val = None
-        for p in props:
-            if p['name'] == 'textures':
-                texture_val = p['value']
-                break
+        async with httpx.AsyncClient() as client:
+            if len(identifier) == 32 or len(identifier) == 36:
+                uuid_val = identifier.replace('-', '')
+            else:
+                r1 = await client.get(f"https://api.mojang.com/users/profiles/minecraft/{identifier}", timeout=5)
+                if r1.status_code != 200:
+                    # Retry with modern equivalent
+                    r1 = await client.get(f"https://api.minecraftservices.com/minecraft/profile/lookup/name/{identifier}", timeout=5)
+                if r1.status_code != 200:
+                    raise HTTPException(status_code=404, detail="Minecraft player not found.")
+                uuid_val = r1.json()['id']
                 
-        if not texture_val:
-            raise HTTPException(status_code=404, detail="This player does not currently have a retrievable skin.")
+            r2 = await client.get(f"https://sessionserver.mojang.com/session/minecraft/profile/{uuid_val}", timeout=5)
+            if r2.status_code != 200:
+                raise HTTPException(status_code=404, detail="Profile not found.")
+                
+            data = r2.json()
+            props = data.get('properties', [])
+            texture_val = None
+            for p in props:
+                if p['name'] == 'textures':
+                    texture_val = p['value']
+                    break
+                    
+            if not texture_val:
+                raise HTTPException(status_code=404, detail="This player does not currently have a retrievable skin.")
+                
+            decoded = json.loads(base64.b64decode(texture_val).decode('utf-8'))
             
-        decoded = json.loads(base64.b64decode(texture_val).decode('utf-8'))
-        
-        textures = decoded.get('textures', {})
-        skin_info = textures.get('SKIN', {})
-        cape_info = textures.get('CAPE', {})
-        
-        result = {
-            'username': data.get('name'),
-            'uuid': data.get('id'),
-            'skin': {
-                'url': skin_info.get('url'),
-                'model': skin_info.get('metadata', {}).get('model', 'classic')
-            },
-            'cape': {
-                'url': cape_info.get('url')
-            } if cape_info.get('url') else None
-        }
-        
-        mojang_cache[identifier] = {'time': now, 'data': result}
-        mojang_cache[data.get('id')] = {'time': now, 'data': result}
-        mojang_cache[data.get('name')] = {'time': now, 'data': result}
-        return result
-        
+            textures = decoded.get('textures', {})
+            skin_info = textures.get('SKIN', {})
+            cape_info = textures.get('CAPE', {})
+            
+            result = {
+                'username': data.get('name'),
+                'uuid': data.get('id'),
+                'skin': {
+                    'url': skin_info.get('url'),
+                    'model': skin_info.get('metadata', {}).get('model', 'classic')
+                },
+                'cape': {
+                    'url': cape_info.get('url')
+                } if cape_info.get('url') else None,
+                'slimModel': skin_info.get('metadata', {}).get('model') == 'slim'
+            }
+            
+            mojang_cache[identifier] = {'time': now, 'data': result}
+            mojang_cache[data.get('id')] = {'time': now, 'data': result}
+            mojang_cache[data.get('name')] = {'time': now, 'data': result}
+            return result
+            
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail="Minecraft profile service is temporarily unavailable.")
+
+minecraft_versions_cache = {'time': 0, 'data': None}
+
+@api.get("/minecraft/versions")
+async def get_minecraft_versions():
+    now = time.time()
+    if minecraft_versions_cache['data'] and now - minecraft_versions_cache['time'] < 3600:
+        return minecraft_versions_cache['data']
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json", timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                minecraft_versions_cache['data'] = data
+                minecraft_versions_cache['time'] = now
+                return data
+    except Exception:
+        pass
+    
+    if minecraft_versions_cache['data']:
+        return minecraft_versions_cache['data']
+    raise HTTPException(status_code=500, detail="Failed to fetch Minecraft versions")
 
 @api.get("/minecraft/download/{texture_id}")
 async def download_minecraft_texture(texture_id: str, username: str = "skin"):
