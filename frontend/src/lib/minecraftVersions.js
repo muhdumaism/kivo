@@ -27,7 +27,22 @@ export function useMinecraftVersions() {
 
   // Helpers to get specific lists
   const getReleases = () => {
-    if (!data || !data.versions) return [];
+    if (!data || !data.versions || data.versions.length === 0) {
+      return [
+        { id: '26.2', type: 'release' },
+        { id: '26.1', type: 'release' },
+        { id: '1.21.4', type: 'release' },
+        { id: '1.21.1', type: 'release' },
+        { id: '1.20.4', type: 'release' },
+        { id: '1.20.1', type: 'release' },
+        { id: '1.19.2', type: 'release' },
+        { id: '1.18.2', type: 'release' },
+        { id: '1.17.1', type: 'release' },
+        { id: '1.16.5', type: 'release' },
+        { id: '1.12.2', type: 'release' },
+        { id: '1.8.9', type: 'release' }
+      ];
+    }
     return data.versions.filter(v => v.type === 'release');
   };
 
@@ -44,7 +59,7 @@ export function useMinecraftVersions() {
   return {
     loading,
     error,
-    latest: data?.latest || { release: '1.20.4', snapshot: '24w03a' }, // Fallback in case of failure
+    latest: data?.latest || { release: '26.2', snapshot: '26w33a' }, // Fallback in case of failure
     getReleases,
     getSnapshots,
     getAll
