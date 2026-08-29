@@ -21,6 +21,8 @@ export function Footer() {
             <h4 className="font-heading font-extrabold text-sm uppercase tracking-wider text-[#FFF8E1] mb-4">Navigation</h4>
             <div className="flex flex-col gap-2.5 text-sm text-[#FFF8E1]/70 font-semibold">
               <Link to="/browse" className="hover:text-[#92400E] transition-colors">Games</Link>
+              <Link to="/skins" className="hover:text-[#92400E] transition-colors">Skins</Link>
+              <Link to="/tools" className="hover:text-[#92400E] transition-colors">Tools</Link>
               <Link to="/news" className="hover:text-[#92400E] transition-colors">News</Link>
               <Link to="/about" className="hover:text-[#92400E] transition-colors">About</Link>
               <Link to="/contact" className="hover:text-[#92400E] transition-colors">Contact</Link>

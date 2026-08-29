@@ -37,6 +37,7 @@ export function Navbar() {
           <nav className="hidden lg:flex items-center justify-center gap-6 flex-1 max-w-xl mx-auto">
             <Link to="/browse" className="nav-link-cool text-sm font-heading font-extrabold">Browse</Link>
             <Link to="/skins" className="nav-link-cool text-sm font-heading font-extrabold">Skins</Link>
+            <Link to="/tools" className="nav-link-cool text-sm font-heading font-extrabold">Tools</Link>
             <Link to="/news" className="nav-link-cool text-sm font-heading font-extrabold">News</Link>
             <Link to="/about" className="nav-link-cool text-sm font-heading font-extrabold">About</Link>
             <Link to="/contact" className="nav-link-cool text-sm font-heading font-extrabold">Contact</Link>
@@ -61,6 +62,7 @@ export function Navbar() {
           <div className="lg:hidden border-b-2 border-[#92400E] bg-[#171512] px-4 py-3 space-y-1">
             <Link to="/browse" data-testid="mnav-discover" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Discover content</Link>
             <Link to="/skins" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Skins</Link>
+            <Link to="/tools" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Tools</Link>
             <Link to="/browse" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Host a server</Link>
             {user ? (
               <>
