@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Download, Server, Sparkles, Box, Shield, Cpu, Zap, Activity, ImageIcon } from "lucide-react";
+import { Navbar } from "@/components/qiveo/Navbar";
 import { Footer } from "@/components/qiveo/Footer";
 import api, { API } from "@/lib/api";
 
@@ -13,6 +14,7 @@ export default function Client() {
 
   return (
     <div className="min-h-screen bg-[#000000] text-[#FFF8E1] font-sans selection:bg-[#F5C542] selection:text-[#000000]">
+      <Navbar />
       {/* Hero Section */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Background elements */}
@@ -22,65 +24,34 @@ export default function Client() {
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-            {/* Text Content */}
-            <div className="space-y-8 reveal in">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5C542]/10 border border-[#F5C542]/30 text-[#F5C542] text-sm font-bold font-mono">
-                <Sparkles className="w-4 h-4" />
-                <span>Minecraft 26.2+ Required</span>
-              </div>
-              <h1 className="text-5xl lg:text-7xl font-black font-heading tracking-tight leading-[1.1]">
-                The ultimate <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F5C542] to-[#FFD84D]">redesign</span> for Minecraft.
-              </h1>
-              <p className="text-xl text-[#FFF8E1]/70 max-w-lg leading-relaxed">
-                Qiveo Client is an all-in-one client-side mod that completely overhauls your game. Essential features, single-player world hosting, and breathtaking aesthetics—built right in.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <a 
-                  href={`${API.replace("/api", "")}/api/client/download`} 
-                  className="inline-flex justify-center items-center gap-2 retro-btn-black px-8 py-4 text-lg"
-                >
-                  <Download className="w-5 h-5" />
-                  Download Mod
-                </a>
-                <a 
-                  href="#documentation" 
-                  className="inline-flex justify-center items-center gap-2 retro-btn-dashed px-8 py-4 text-lg"
-                >
-                  Read Documentation
-                </a>
-              </div>
+        <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
+          <div className="flex flex-col items-center justify-center space-y-8 reveal in">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5C542]/10 border border-[#F5C542]/30 text-[#F5C542] text-sm font-bold font-mono">
+              <Sparkles className="w-4 h-4" />
+              <span>Minecraft 26.2+ Required</span>
             </div>
-
-            {/* Hero Image */}
-            <div className="relative reveal in" style={{ transitionDelay: '0.2s' }}>
-              <div className="relative rounded-3xl overflow-hidden border-2 border-[#92400E]/40 shadow-[0_0_50px_rgba(245,197,66,0.15)] aspect-square lg:aspect-auto lg:h-[600px] w-full">
-                <img 
-                  src="/qiveo-client-hero.jpg" 
-                  alt="Qiveo Client Hero" 
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-transparent to-transparent opacity-60"></div>
-                
-                {/* Floating Badge */}
-                <div className="absolute bottom-6 left-6 right-6 backdrop-blur-xl bg-[#171512]/80 border border-[#F5C542]/30 rounded-2xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[#F5C542] flex items-center justify-center text-[#000000]">
-                      <Cpu className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="font-heading font-bold text-[#FFF8E1]">Highly Optimized</p>
-                      <p className="text-sm font-mono text-[#FFF8E1]/60">Built for performance</p>
-                    </div>
-                  </div>
-                  <div className="text-right hidden sm:block">
-                    <p className="text-[#F5C542] font-black text-xl">v1.0.0</p>
-                  </div>
-                </div>
-              </div>
+            <h1 className="text-5xl lg:text-7xl font-black font-heading tracking-tight leading-[1.1]">
+              The ultimate <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F5C542] to-[#FFD84D]">redesign</span> for Minecraft.
+            </h1>
+            <p className="text-xl text-[#FFF8E1]/70 leading-relaxed max-w-2xl">
+              Qiveo Client is an all-in-one client-side mod that completely overhauls your game. Essential features, single-player world hosting, and breathtaking aesthetics—built right in.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <a 
+                href={`${API.replace("/api", "")}/api/client/download`} 
+                className="inline-flex justify-center items-center gap-2 retro-btn-black px-8 py-4 text-lg"
+              >
+                <Download className="w-5 h-5" />
+                Download Mod
+              </a>
+              <a 
+                href="#documentation" 
+                className="inline-flex justify-center items-center gap-2 retro-btn-dashed px-8 py-4 text-lg"
+              >
+                Read Documentation
+              </a>
             </div>
           </div>
         </div>
