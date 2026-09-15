@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { LayoutDashboard, ClipboardCheck, Flag, Users, ScrollText, Activity, Shield, Newspaper, Mail, ArrowLeft, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck, Flag, Users, ScrollText, Activity, Shield, Newspaper, Mail, ArrowLeft, PanelLeftClose, PanelLeftOpen, Box } from "lucide-react";
 import { AdminSidebar } from "@/components/qiveo/AdminSidebar";
 
 const NAV_GROUPS = [
@@ -26,14 +26,15 @@ const NAV_GROUPS = [
       { id: '/admin/users', title: 'Users & Trust', icon: Users },
       { id: '/admin/news', title: 'Publish News', icon: Newspaper },
       { id: '/admin/contact', title: 'Contact Inquiries', icon: Mail },
+      { id: '/admin/client', title: 'Client Mod', icon: Box },
       { id: '/admin/audit', title: 'Audit Log', icon: ScrollText },
     ]
   }
 ];
 
 const PERMS = {
-  super_admin: ["/admin", "/admin/queue", "/admin/mods", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/audit", "/admin/anomalies"],
-  ts_moderator: ["/admin", "/admin/queue", "/admin/mods", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/audit", "/admin/anomalies"],
+  super_admin: ["/admin", "/admin/queue", "/admin/mods", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/client", "/admin/audit", "/admin/anomalies"],
+  ts_moderator: ["/admin", "/admin/queue", "/admin/mods", "/admin/reports", "/admin/users", "/admin/news", "/admin/contact", "/admin/client", "/admin/audit", "/admin/anomalies"],
   content_reviewer: ["/admin", "/admin/queue", "/admin/mods", "/admin/anomalies"],
   support_agent: ["/admin", "/admin/reports", "/admin/users", "/admin/contact", "/admin/anomalies"],
   auditor: ["/admin", "/admin/users", "/admin/audit", "/admin/anomalies"],

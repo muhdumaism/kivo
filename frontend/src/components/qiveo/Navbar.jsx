@@ -35,6 +35,7 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden lg:flex items-center justify-center gap-6 flex-1 max-w-xl mx-auto">
+            <Link to="/client" className="nav-link-cool text-sm font-heading font-extrabold text-[#F5C542]">Client</Link>
             <Link to="/browse" className="nav-link-cool text-sm font-heading font-extrabold">Browse</Link>
             <Link to="/skins" className="nav-link-cool text-sm font-heading font-extrabold">Skins</Link>
             <Link to="/tools" className="nav-link-cool text-sm font-heading font-extrabold">Tools</Link>
@@ -60,6 +61,7 @@ export function Navbar() {
 
         {mobile && (
           <div className="lg:hidden border-b-2 border-[#92400E] bg-[#171512] px-4 py-3 space-y-1">
+            <Link to="/client" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#F5C542] hover:bg-[#F5C542]/5 font-heading font-bold">Get Qiveo Client</Link>
             <Link to="/browse" data-testid="mnav-discover" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Discover content</Link>
             <Link to="/skins" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Skins</Link>
             <Link to="/tools" onClick={() => setMobile(false)} className="block px-3 py-2.5 rounded-lg text-[#FFF8E1] hover:bg-[#F5C542]/5 font-heading font-bold">Tools</Link>

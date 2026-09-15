@@ -334,6 +334,22 @@ class SQLVersionPlatform(Base):
     version_id = Column(String(64), nullable=False)
     platform_id = Column(String(64), nullable=False)
 
+class SQLClientVersion(Base):
+    __tablename__ = "client_versions"
+    id = Column(String(64), primary_key=True)
+    version_name = Column(String(100), nullable=False)
+    file_path = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=False)
+    uploaded_at = Column(Float, default=lambda: time.time())
+
+class SQLClientGallery(Base):
+    __tablename__ = "client_gallery"
+    id = Column(String(64), primary_key=True)
+    image_url = Column(String(255), nullable=False)
+    caption = Column(String(255), nullable=True)
+    display_order = Column(Integer, default=0)
+    uploaded_at = Column(Float, default=lambda: time.time())
+
 # Emulation classes for MongoDB API using SQLAlchemy
 
 class SQLCollection:
@@ -620,6 +636,8 @@ class SQLDatabase:
         self.role_permissions = SQLCollection(SQLRolePermission, session_factory)
         self.categories = SQLCollection(SQLCategory, session_factory)
         self.loaders = SQLCollection(SQLLoader, session_factory)
+        self.client_versions = SQLCollection(SQLClientVersion, session_factory)
+        self.client_gallery = SQLCollection(SQLClientGallery, session_factory)
         self.platforms = SQLCollection(SQLPlatform, session_factory)
         self.project_categories = SQLCollection(SQLProjectCategory, session_factory)
         self.version_loaders = SQLCollection(SQLVersionLoader, session_factory)
@@ -2654,6 +2672,86 @@ async def on_startup():
         await conn.run_sync(Base.metadata.create_all)
     await seed()
 
+
+# --- Qiveo Client Management Endpoints ---
+
+@api.post("/admin/client/version")
+async def upload_client_version(version: str = Form(...), file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    if not is_admin(user.get("email", "")):
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    os.makedirs(ROOT_DIR / "uploads" / "client", exist_ok=True)
+    file_ext = os.path.splitext(file.filename)[1]
+    safe_name = f"qiveoclient-{version}-{uuid.uuid4().hex[:8]}{file_ext}"
+    file_path = ROOT_DIR / "uploads" / "client" / safe_name
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    client_version = {
+        "id": uuid.uuid4().hex,
+        "version_name": version,
+        "file_path": f"/uploads/client/{safe_name}",
+        "is_active": True,
+        "uploaded_at": time.time()
+    }
+    
+    # Deactivate others
+    await db.client_versions.update_many({}, {"$set": {"is_active": False}})
+    await db.client_versions.insert_one(client_version)
+    
+    return {"success": True, "version": client_version}
+
+@api.get("/client/download")
+async def download_active_client():
+    active = await db.client_versions.find_one({"is_active": True})
+    if not active:
+        raise HTTPException(status_code=404, detail="No active client version found")
+        
+    file_path = ROOT_DIR / active["file_path"].lstrip("/")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+        
+    return FileResponse(path=file_path, filename=f"QiveoClient-{active['version_name']}.jar")
+
+@api.post("/admin/client/gallery")
+async def upload_client_gallery(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    if not is_admin(user.get("email", "")):
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    os.makedirs(ROOT_DIR / "uploads" / "client", exist_ok=True)
+    file_ext = os.path.splitext(file.filename)[1]
+    safe_name = f"gallery-{uuid.uuid4().hex[:8]}{file_ext}"
+    file_path = ROOT_DIR / "uploads" / "client" / safe_name
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    image = {
+        "id": uuid.uuid4().hex,
+        "image_url": f"/api/files/client/{safe_name}",
+        "caption": "",
+        "display_order": int(time.time()),
+        "uploaded_at": time.time()
+    }
+    
+    await db.client_gallery.insert_one(image)
+    return {"success": True, "image": image}
+
+@api.get("/client/gallery")
+async def get_client_gallery():
+    cursor = db.client_gallery.find({}).sort("display_order", 1)
+    images = await cursor.to_list(length=100)
+    for img in images:
+        img["_id"] = str(img.get("_id", ""))
+    return images
+
+@api.get("/files/client/{filename}")
+async def serve_client_gallery_file(filename: str):
+    file_path = ROOT_DIR / "uploads" / "client" / filename
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(path=file_path)
 
 app.include_router(api)
 

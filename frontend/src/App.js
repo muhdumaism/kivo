@@ -21,6 +21,7 @@ import Skins from "@/pages/Skins";
 import PlayerProfile from "@/pages/PlayerProfile";
 import SkinUpload from "@/pages/SkinUpload";
 import SkinDetail from "@/pages/SkinDetail";
+import Client from "@/pages/Client";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AdminOverview from "@/pages/admin/AdminOverview";
 import AdminMods from "@/pages/admin/AdminMods";
@@ -31,6 +32,7 @@ import AdminNews from "@/pages/admin/AdminNews";
 import AdminContact from "@/pages/admin/AdminContact";
 import AuditLog from "@/pages/admin/AuditLog";
 import Anomaly from "@/pages/admin/Anomaly";
+import AdminClientConfig from "@/pages/admin/AdminClientConfig";
 
 // Tools Hub & Pages
 import ToolsHub from "@/pages/tools/ToolsHub";
@@ -80,6 +82,7 @@ function App() {
             <Route path="/skins" element={<Skins />} />
             <Route path="/skins/player/:id" element={<PlayerProfile />} />
             <Route path="/skins/:slug" element={<SkinDetail />} />
+            <Route path="/client" element={<Client />} />
 
             {/* Tools Hub & Pages */}
             <Route path="/tools" element={<ToolsHub />} />
@@ -114,6 +117,7 @@ function App() {
               <Route path="users" element={<UsersTrust />} />
               <Route path="news" element={<AdminNews />} />
               <Route path="contact" element={<AdminContact />} />
+              <Route path="client" element={<AdminClientConfig />} />
               <Route path="audit" element={<AuditLog />} />
               <Route path="anomalies" element={<Anomaly />} />
             </Route>
