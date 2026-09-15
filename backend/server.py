@@ -2676,10 +2676,7 @@ async def on_startup():
 # --- Qiveo Client Management Endpoints ---
 
 @api.post("/admin/client/version")
-async def upload_client_version(version: str = Form(...), file: UploadFile = File(...), user: dict = Depends(get_current_user)):
-    if not is_admin(user.get("email", "")):
-        raise HTTPException(status_code=403, detail="Not authorized")
-        
+async def upload_client_version(version: str = Form(...), file: UploadFile = File(...), user: dict = Depends(require_staff("super_admin", "ts_moderator"))):
     os.makedirs(ROOT_DIR / "uploads" / "client", exist_ok=True)
     file_ext = os.path.splitext(file.filename)[1]
     safe_name = f"qiveoclient-{version}-{uuid.uuid4().hex[:8]}{file_ext}"
@@ -2715,10 +2712,7 @@ async def download_active_client():
     return FileResponse(path=file_path, filename=f"QiveoClient-{active['version_name']}.jar")
 
 @api.post("/admin/client/gallery")
-async def upload_client_gallery(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
-    if not is_admin(user.get("email", "")):
-        raise HTTPException(status_code=403, detail="Not authorized")
-        
+async def upload_client_gallery(file: UploadFile = File(...), user: dict = Depends(require_staff("super_admin", "ts_moderator"))):
     os.makedirs(ROOT_DIR / "uploads" / "client", exist_ok=True)
     file_ext = os.path.splitext(file.filename)[1]
     safe_name = f"gallery-{uuid.uuid4().hex[:8]}{file_ext}"
