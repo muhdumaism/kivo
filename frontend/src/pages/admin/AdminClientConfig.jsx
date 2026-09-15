@@ -10,13 +10,24 @@ export default function AdminClientConfig() {
   
   const [galleryFile, setGalleryFile] = useState(null);
   const [gallery, setGallery] = useState([]);
+  const [activeVersion, setActiveVersion] = useState(null);
   
   const modInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
   useEffect(() => {
     loadGallery();
+    loadActiveVersion();
   }, []);
+
+  const loadActiveVersion = async () => {
+    try {
+      const res = await api.get("/client/active-version");
+      setActiveVersion(res.data.version);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const loadGallery = async () => {
     try {
@@ -44,6 +55,7 @@ export default function AdminClientConfig() {
       setVersion("");
       setModFile(null);
       if (modInputRef.current) modInputRef.current.value = "";
+      loadActiveVersion();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Upload failed");
     } finally {
@@ -126,6 +138,16 @@ export default function AdminClientConfig() {
               {loading ? "Uploading..." : "Publish Release"}
             </button>
           </form>
+
+          {activeVersion && (
+            <div className="mt-6 p-4 rounded-xl bg-[#24201A] border border-[#F5C542]/30 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-[#FFF8E1]/50 font-bold uppercase tracking-wider mb-1">Currently Active</p>
+                <p className="text-[#F5C542] font-mono font-bold">{activeVersion}</p>
+              </div>
+              <ShieldCheck className="w-6 h-6 text-[#F5C542]" />
+            </div>
+          )}
         </div>
 
         {/* Gallery Upload Section */}

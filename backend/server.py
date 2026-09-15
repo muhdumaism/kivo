@@ -2699,6 +2699,13 @@ async def upload_client_version(version: str = Form(...), file: UploadFile = Fil
     
     return {"success": True, "version": client_version}
 
+@api.get("/client/active-version")
+async def get_active_client_version():
+    active = await db.client_versions.find_one({"is_active": True})
+    if not active:
+        return {"version": None}
+    return {"version": active.get("version_name"), "uploaded_at": active.get("uploaded_at")}
+
 @api.get("/client/download")
 async def download_active_client():
     active = await db.client_versions.find_one({"is_active": True})
