@@ -16,7 +16,7 @@ export default function Client() {
     <div className="min-h-screen bg-[#000000] text-[#FFF8E1] font-sans selection:bg-[#F5C542] selection:text-[#000000]">
       <Navbar />
       {/* Hero Section */}
-      <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+      <div className="relative min-h-[calc(100vh-64px)] flex items-center justify-center overflow-hidden">
         {/* Background elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
           <img 
