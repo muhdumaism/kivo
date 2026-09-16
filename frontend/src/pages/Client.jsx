@@ -6,45 +6,24 @@ import api, { API } from "@/lib/api";
 
 export default function Client() {
   const [gallery, setGallery] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     api.get("/client/gallery").then(res => setGallery(res.data)).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (gallery.length > 0) {
-      const interval = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % gallery.length);
-      }, 4000);
-      return () => clearInterval(interval);
-    }
-  }, [gallery]);
-
   return (
     <div className="min-h-screen bg-[#000000] text-[#FFF8E1] font-sans selection:bg-[#F5C542] selection:text-[#000000]">
       <Navbar />
       {/* Hero Section */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Background elements (Slideshow) */}
+        {/* Background elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-          {gallery.length === 0 ? (
-            <img 
-              src="/qiveo-client-hero.jpg" 
-              alt="Default Hero" 
-              className="absolute inset-0 w-full h-full object-cover opacity-60"
-            />
-          ) : (
-            gallery.map((img, index) => (
-              <img 
-                key={img.id}
-                src={`${API.replace("/api", "")}${img.image_url}`}
-                alt={`Slide ${index}`}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
-              />
-            ))
-          )}
+          <img 
+            src="/clienthero.gif" 
+            alt="Qiveo Client Hero" 
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
+          />
           
           <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/50 to-transparent"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/80 via-transparent to-transparent"></div>
