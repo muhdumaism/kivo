@@ -15,15 +15,15 @@ async def migrate():
             texture_hash = m['id'] 
             exists = await db.skins.find_one({'id': texture_hash})
             if not exists:
-                await db.skins.insert_one(SQLSkin(
-                    id=texture_hash, 
-                    texture_url=skin_url, 
-                    model='classic', 
-                    source='qiveo', 
-                    name=m['title'], 
-                    qiveo_mod_id=m['id'], 
-                    created_at=m.get('created_at', str(time.time()))
-                ))
+                await db.skins.insert_one({
+                    'id': texture_hash, 
+                    'texture_url': skin_url, 
+                    'model': 'classic', 
+                    'source': 'qiveo', 
+                    'name': m['title'], 
+                    'qiveo_mod_id': m['id'], 
+                    'created_at': m.get('created_at', str(time.time()))
+                })
                 count += 1
     print(f'Migrated {count} skins.')
 

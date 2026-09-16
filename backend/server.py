@@ -2289,13 +2289,13 @@ async def get_minecraft_profile(identifier: str):
                 
                 existing_skin = await db.skins.find_one({"id": texture_id})
                 if not existing_skin:
-                    await db.skins.insert_one(SQLSkin(
-                        id=texture_id,
-                        texture_url=skin_url,
-                        model=model,
-                        source="minecraft",
-                        created_at=str(now)
-                    ))
+                    await db.skins.insert_one({
+                        "id": texture_id,
+                        "texture_url": skin_url,
+                        "model": model,
+                        "source": "minecraft",
+                        "created_at": str(now)
+                    })
                 
                 existing_usage = await db.skin_usage.find_one({"uuid": data.get('id')})
                 if existing_usage:
@@ -2304,12 +2304,12 @@ async def get_minecraft_profile(identifier: str):
                         {"$set": {"username": data.get('name'), "skin_id": texture_id, "last_seen": str(now)}}
                     )
                 else:
-                    await db.skin_usage.insert_one(SQLSkinUsage(
-                        uuid=data.get('id'),
-                        username=data.get('name'),
-                        skin_id=texture_id,
-                        last_seen=str(now)
-                    ))
+                    await db.skin_usage.insert_one({
+                        "uuid": data.get('id'),
+                        "username": data.get('name'),
+                        "skin_id": texture_id,
+                        "last_seen": str(now)
+                    })
             
             result = {
                 'username': data.get('name'),
@@ -2461,15 +2461,15 @@ async def publish_skin(
     texture_hash = hashlib.sha256(skin_data).hexdigest()
     existing_skin = await db.skins.find_one({"id": texture_hash})
     if not existing_skin:
-        await db.skins.insert_one(SQLSkin(
-            id=texture_hash,
-            texture_url=skin_url,
-            model=skin_model,
-            source="qiveo",
-            name=title,
-            qiveo_mod_id=mod["id"],
-            created_at=mod["created_at"]
-        ))
+        await db.skins.insert_one({
+            "id": texture_hash,
+            "texture_url": skin_url,
+            "model": skin_model,
+            "source": "qiveo",
+            "name": title,
+            "qiveo_mod_id": mod["id"],
+            "created_at": mod["created_at"]
+        })
     elif not existing_skin.get("qiveo_mod_id"):
         await db.skins.update_many({"id": texture_hash}, {"$set": {"qiveo_mod_id": mod["id"], "source": "qiveo", "texture_url": skin_url, "name": title}})
     
