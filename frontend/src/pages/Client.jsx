@@ -26,9 +26,9 @@ export default function Client() {
 
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
           <div className="flex flex-col items-center justify-center space-y-8 reveal in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F5C542]/10 border border-[#F5C542]/30 text-[#F5C542] text-sm font-bold font-mono">
-              <Sparkles className="w-4 h-4" />
-              <span>Minecraft 26.2+ Required</span>
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 bg-[#171512] border-2 border-[#92400E] shadow-[4px_4px_0px_#92400E] text-[#F5C542] font-pixel text-[10px] sm:text-xs uppercase tracking-widest transform -rotate-2 hover:rotate-0 transition-transform cursor-default">
+              <div className="w-2 h-2 bg-[#F5C542] animate-pulse"></div>
+              <span>Requires Minecraft 26.2+</span>
             </div>
             <h1 className="text-5xl lg:text-7xl font-black font-heading tracking-tight leading-[1.1]">
               The ultimate <br />
