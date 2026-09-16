@@ -29,16 +29,25 @@ export default function Client() {
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Background elements (Slideshow) */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-[#000000]">
-          {gallery.map((img, index) => (
+          {gallery.length === 0 ? (
             <img 
-              key={img.id}
-              src={`${API.replace("/api", "")}${img.image_url}`}
-              alt={`Slide ${index}`}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentSlide === index ? 'opacity-40' : 'opacity-0'}`}
+              src="/qiveo-client-hero.jpg" 
+              alt="Default Hero" 
+              className="absolute inset-0 w-full h-full object-cover opacity-60"
             />
-          ))}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/60 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/80 via-transparent to-transparent"></div>
+          ) : (
+            gallery.map((img, index) => (
+              <img 
+                key={img.id}
+                src={`${API.replace("/api", "")}${img.image_url}`}
+                alt={`Slide ${index}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentSlide === index ? 'opacity-60' : 'opacity-0'}`}
+              />
+            ))
+          )}
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/80 to-[#000000]/30"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#000000] via-transparent to-transparent"></div>
           
           {/* Keep stardust for retro feel */}
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
