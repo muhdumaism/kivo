@@ -28,7 +28,7 @@ export default function Client() {
       {/* Hero Section */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Background elements (Slideshow) */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-[#000000]">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
           {gallery.length === 0 ? (
             <img 
               src="/qiveo-client-hero.jpg" 
