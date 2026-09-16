@@ -6,22 +6,42 @@ import api, { API } from "@/lib/api";
 
 export default function Client() {
   const [gallery, setGallery] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     api.get("/client/gallery").then(res => setGallery(res.data)).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (gallery.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % gallery.length);
+      }, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [gallery]);
+
   return (
     <div className="min-h-screen bg-[#000000] text-[#FFF8E1] font-sans selection:bg-[#F5C542] selection:text-[#000000]">
       <Navbar />
       {/* Hero Section */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Background elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-          <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] rounded-full bg-[#92400E]/20 blur-[120px]"></div>
-          <div className="absolute bottom-[-10%] left-[-10%] w-[30rem] h-[30rem] rounded-full bg-[#F5C542]/10 blur-[100px]"></div>
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+        {/* Background elements (Slideshow) */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-[#000000]">
+          {gallery.map((img, index) => (
+            <img 
+              key={img.id}
+              src={`${API.replace("/api", "")}${img.image_url}`}
+              alt={`Slide ${index}`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentSlide === index ? 'opacity-40' : 'opacity-0'}`}
+            />
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/80 via-transparent to-transparent"></div>
+          
+          {/* Keep stardust for retro feel */}
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
         </div>
 
         <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
