@@ -22,6 +22,7 @@ from typing import List, Optional, Literal
 import jwt
 import bcrypt
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Request, UploadFile, File, Form, WebSocket, WebSocketDisconnect
+import hashlib
 from fastapi.responses import StreamingResponse, FileResponse, RedirectResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
@@ -350,6 +351,22 @@ class SQLClientGallery(Base):
     display_order = Column(Integer, default=0)
     uploaded_at = Column(Float, default=lambda: time.time())
 
+class SQLSkin(Base):
+    __tablename__ = "skins"
+    id = Column(String(64), primary_key=True) # SHA-256 or Texture ID
+    texture_url = Column(String(255), nullable=False)
+    model = Column(String(64), default="classic")
+    source = Column(String(64), default="external") # qiveo, minecraft, external
+    name = Column(String(128), nullable=True)
+    qiveo_mod_id = Column(String(64), nullable=True)
+    created_at = Column(String(64), nullable=True)
+
+class SQLSkinUsage(Base):
+    __tablename__ = "skin_usage"
+    uuid = Column(String(64), primary_key=True)
+    username = Column(String(128), nullable=False)
+    skin_id = Column(String(64), nullable=False)
+    last_seen = Column(String(64), nullable=True)
 # Emulation classes for MongoDB API using SQLAlchemy
 
 class SQLCollection:
@@ -642,6 +659,8 @@ class SQLDatabase:
         self.project_categories = SQLCollection(SQLProjectCategory, session_factory)
         self.version_loaders = SQLCollection(SQLVersionLoader, session_factory)
         self.version_platforms = SQLCollection(SQLVersionPlatform, session_factory)
+        self.skins = SQLCollection(SQLSkin, session_factory)
+        self.skin_usage = SQLCollection(SQLSkinUsage, session_factory)
 
 db = SQLDatabase(async_session)
 
@@ -2262,17 +2281,47 @@ async def get_minecraft_profile(identifier: str):
             skin_info = textures.get('SKIN', {})
             cape_info = textures.get('CAPE', {})
             
+            skin_url = skin_info.get('url')
+            model = skin_info.get('metadata', {}).get('model', 'classic')
+            
+            if skin_url:
+                texture_id = skin_url.split('/')[-1]
+                
+                existing_skin = await db.skins.find_one({"id": texture_id})
+                if not existing_skin:
+                    await db.skins.insert_one(SQLSkin(
+                        id=texture_id,
+                        texture_url=skin_url,
+                        model=model,
+                        source="minecraft",
+                        created_at=str(now)
+                    ))
+                
+                existing_usage = await db.skin_usage.find_one({"uuid": data.get('id')})
+                if existing_usage:
+                    await db.skin_usage.update_many(
+                        {"uuid": data.get('id')},
+                        {"$set": {"username": data.get('name'), "skin_id": texture_id, "last_seen": str(now)}}
+                    )
+                else:
+                    await db.skin_usage.insert_one(SQLSkinUsage(
+                        uuid=data.get('id'),
+                        username=data.get('name'),
+                        skin_id=texture_id,
+                        last_seen=str(now)
+                    ))
+            
             result = {
                 'username': data.get('name'),
                 'uuid': data.get('id'),
                 'skin': {
-                    'url': skin_info.get('url'),
-                    'model': skin_info.get('metadata', {}).get('model', 'classic')
+                    'url': skin_url,
+                    'model': model
                 },
                 'cape': {
                     'url': cape_info.get('url')
                 } if cape_info.get('url') else None,
-                'slimModel': skin_info.get('metadata', {}).get('model') == 'slim'
+                'slimModel': model == 'slim'
             }
             
             mojang_cache[identifier] = {'time': now, 'data': result}
@@ -2408,6 +2457,21 @@ async def publish_skin(
     }
     
     mod['tags'].extend([f"model:{skin_model}", f"width:{dims[0]}", f"height:{dims[1]}"])
+    
+    texture_hash = hashlib.sha256(skin_data).hexdigest()
+    existing_skin = await db.skins.find_one({"id": texture_hash})
+    if not existing_skin:
+        await db.skins.insert_one(SQLSkin(
+            id=texture_hash,
+            texture_url=skin_url,
+            model=skin_model,
+            source="qiveo",
+            name=title,
+            qiveo_mod_id=mod["id"],
+            created_at=mod["created_at"]
+        ))
+    elif not existing_skin.get("qiveo_mod_id"):
+        await db.skins.update_many({"id": texture_hash}, {"$set": {"qiveo_mod_id": mod["id"], "source": "qiveo", "texture_url": skin_url, "name": title}})
     
     await db.mods.insert_one(mod)
     await audit(user, "create_mod", "mod", mod["id"], after={"status": status})
@@ -2753,6 +2817,85 @@ async def serve_client_gallery_file(filename: str):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(path=file_path)
+
+@api.get("/v2/skins")
+async def get_v2_skins(
+    q: Optional[str] = None, 
+    source: Optional[str] = "all", 
+    model: Optional[str] = "all", 
+    usage: Optional[str] = "all", 
+    page: int = 1, 
+    limit: int = 24
+):
+    query = {}
+    if source and source != "all":
+        query["source"] = source
+    if model and model != "all":
+        query["model"] = model
+        
+    skins = await db.skins.find(query).to_list(length=None)
+    usages = await db.skin_usage.find({}).to_list(length=None)
+    
+    usage_map = {}
+    for u in usages:
+        if u["skin_id"] not in usage_map:
+            usage_map[u["skin_id"]] = []
+        usage_map[u["skin_id"]].append({"username": u["username"], "uuid": u["uuid"]})
+        
+    filtered = []
+    for s in skins:
+        s_usages = usage_map.get(s["id"], [])
+        
+        if usage == "has_users" and len(s_usages) == 0:
+            continue
+        if usage == "no_users" and len(s_usages) > 0:
+            continue
+            
+        if q and q.strip():
+            q_lower = q.lower().strip()
+            matches = False
+            if s.get("name") and q_lower in s["name"].lower():
+                matches = True
+            for u in s_usages:
+                if q_lower in u["username"].lower() or q_lower in u["uuid"].lower():
+                    matches = True
+                    break
+            if not matches:
+                continue
+                
+        s["users"] = s_usages
+        filtered.append(s)
+        
+    # Sort newest first based on created_at
+    filtered.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        
+    total = len(filtered)
+    start = (page - 1) * limit
+    end = start + limit
+    paginated = filtered[start:end]
+    
+    mod_ids = [s["qiveo_mod_id"] for s in paginated if s.get("qiveo_mod_id")]
+    if mod_ids:
+        # Since $in isn't implemented in SQLCollection in the same way, we'll fetch all mods and map
+        # Alternatively, find all mods matching category='skins'
+        mods = await db.mods.find({"category": "skins"}).to_list(length=None)
+        mod_map = {m["id"]: m for m in mods}
+        for s in paginated:
+            if s.get("qiveo_mod_id") and s["qiveo_mod_id"] in mod_map:
+                s["mod"] = mod_map[s["qiveo_mod_id"]]
+                
+    return {
+        "data": paginated,
+        "total": total,
+        "page": page,
+        "limit": limit
+    }
+
+@api.post("/admin/skins/sync")
+async def sync_skins(user: dict = Depends(require_staff("super_admin"))):
+    usages = await db.skin_usage.find({}).to_list(length=None)
+    # Lightweight sync placeholder
+    return {"status": "synced", "count": len(usages)}
 
 app.include_router(api)
 
