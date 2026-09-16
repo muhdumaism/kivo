@@ -41,13 +41,13 @@ export default function Client() {
                 key={img.id}
                 src={`${API.replace("/api", "")}${img.image_url}`}
                 alt={`Slide ${index}`}
-                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentSlide === index ? 'opacity-60' : 'opacity-0'}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${currentSlide === index ? 'opacity-100' : 'opacity-0'}`}
               />
             ))
           )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/80 to-[#000000]/30"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-[#000000] via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/50 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/80 via-transparent to-transparent"></div>
           
           {/* Keep stardust for retro feel */}
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-overlay"></div>
